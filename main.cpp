@@ -28,7 +28,7 @@ int main() {
     // Camera
     auto focal_length = 1.0;
     auto viewport_height = 2.0;
-    auto viewport_width = viewport_height * (double(image_width / image_height));
+    auto viewport_width = viewport_height * (double(image_width) / image_height);
     auto camera_center = point3(0, 0, 0);
 
     // Calculate the vectors across the horizontal and down the vertical viewport edges
@@ -50,7 +50,7 @@ int main() {
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScan lines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++) {
-            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_u);
+            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
             color pixel_color = ray_color(r);
