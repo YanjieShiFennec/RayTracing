@@ -7,7 +7,7 @@
 
 // cmake-build-debug/RayTracing > image.ppm
 
-bool hit_sphere(const point3 &center, double radius, const ray &r) {
+double hit_sphere(const point3 &center, double radius, const ray &r) {
     /*
      * 球体公式：x^2 + y^2 + z^2 = r^2
      * 设球心坐标为 C = (Cx,Cy,Cz)，球面上一点坐标为 P = (x,y,z)
@@ -20,17 +20,32 @@ bool hit_sphere(const point3 &center, double radius, const ray &r) {
      * 二元一次方程 b^2 - 4ac >= 0 时有解，说明光线击中球体
      */
     vec3 oc = center - r.origin();
-    auto a = dot(r.direction(), r.direction());
-    auto b = -2.0 * dot(r.direction(), oc);
-    auto c = dot(oc, oc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
-    return (discriminant >= 0);
+    // auto a = dot(r.direction(), r.direction());
+    // auto b = -2.0 * dot(r.direction(), oc);
+    // auto c = dot(oc, oc) - radius * radius;
+    // auto discriminant = b * b - 4 * a * c;
+    // 将 b = -2h 代入简化求根公式
+    auto a = r.direction().length_squared();
+    auto h = dot(r.direction(), oc);
+    auto c = oc.length_squared() - radius * radius;
+    auto discriminant = h * h - a * c;
+
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+        return (h - sqrt(discriminant)) / a;
+    }
 }
 
 color ray_color(const ray &r) {
-    // 判断光线是否击中球体，球心坐标为 (0,0,-1)，半径为0.5
-    if (hit_sphere(point3(0, 0, -1), 0.5, r))
-        return color(1, 1, 0);
+    // 获取光线击中球体的位置 t，球心坐标为 (0,0,-1)，半径为0.5
+    auto t = hit_sphere(point3(0, 0, -1), 0.5, r);
+    if (t > 0.0) {
+        // 单位法向量
+        vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
+        // 根据球面法向量进行着色
+        return 0.5 * color(N.x() + 1, N.y() + 1, N.z() + 1);
+    }
 
     // 颜色根据高度 y 线性渐变
     // -1.0 < y < 1.0
