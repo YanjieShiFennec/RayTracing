@@ -22,8 +22,8 @@ public:
     }
 
 private:
-    point3 orig;
-    vec3 dir;
+    point3 orig; // 光源坐标
+    vec3 dir; // 光线方向
 };
 
 #endif // RAY_H
