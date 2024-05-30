@@ -12,9 +12,9 @@ int main() {
     int image_height = 256;
 
     // Render
-    std::ofstream outfile("PPMTest.ppm", std::ios_base::out);
+    std::ofstream outfile("../PPMTest.ppm", std::ios_base::out);
     outfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    // std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScan lines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++) {
