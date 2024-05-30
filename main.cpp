@@ -8,7 +8,17 @@
 // cmake-build-debug/RayTracing > image.ppm
 
 bool hit_sphere(const point3 &center, double radius, const ray &r) {
-
+    /*
+     * 球体公式：x^2 + y^2 + z^2 = r^2
+     * 设球心坐标为 C = (Cx,Cy,Cz)，球面上一点坐标为 P = (x,y,z)
+     * 则 (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2 = r^2
+     * 根据向量内积公式 (C-P)·(C-P) = (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2
+     * 得 (C-P)·(C-P) = r^2（·代表向量内积）
+     * 由 ray.h 中的 P(t) = Q + td
+     * 得 (C - (Q + td))·(C - (Q + td)) = r^2
+     * 其中 t 为未知数，展开得 (d·d)t^2 + (-2d·(C-Q))t + (C-Q)·(C-Q) - r^2 = 0
+     * 二元一次方程 b^2 - 4ac >= 0 时有解，说明光线击中球体
+     */
     vec3 oc = center - r.origin();
     auto a = dot(r.direction(), r.direction());
     auto b = -2.0 * dot(r.direction(), oc);
