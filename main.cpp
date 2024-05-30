@@ -7,7 +7,21 @@
 
 // cmake-build-debug/RayTracing > image.ppm
 
+bool hit_sphere(const point3 &center, double radius, const ray &r) {
+
+    vec3 oc = center - r.origin();
+    auto a = dot(r.direction(), r.direction());
+    auto b = -2.0 * dot(r.direction(), oc);
+    auto c = dot(oc, oc) - radius * radius;
+    auto discriminant = b * b - 4 * a * c;
+    return (discriminant >= 0);
+}
+
 color ray_color(const ray &r) {
+    // 判断光线是否击中球体，球心坐标为 (0,0,-1)，半径为0.5
+    if (hit_sphere(point3(0, 0, -1), 0.5, r))
+        return color(1, 1, 0);
+
     // 颜色根据高度 y 线性渐变
     // -1.0 < y < 1.0
     vec3 unit_direction = unit_vector(r.direction());
