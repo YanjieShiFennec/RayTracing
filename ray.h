@@ -3,7 +3,7 @@
 //
 
 #ifndef RAY_H
-#define AY_H
+#define RAY_H
 
 #include "vec3.h"
 
