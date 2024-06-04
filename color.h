@@ -5,9 +5,10 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include "rt_constants.h"
+
 #include <fstream>
 #include "vec3.h"
-#include <iostream>
 
 using color = vec3;
 

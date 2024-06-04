@@ -1,57 +1,24 @@
-#include "color.h"
-#include "vec3.h"
-#include "ray.h"
+#include "rt_constants.h"
 
-#include <iostream>
-#include <fstream>
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
 
 // cmake-build-debug/RayTracing > image.ppm
-
-double hit_sphere(const point3 &center, double radius, const ray &r) {
-    /*
-     * 球体公式：x^2 + y^2 + z^2 = r^2
-     * 设球心坐标为 C = (Cx,Cy,Cz)，球面上一点坐标为 P = (x,y,z)
-     * 则 (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2 = r^2
-     * 根据向量内积公式 (C-P)·(C-P) = (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2
-     * 得 (C-P)·(C-P) = r^2（·代表向量内积）
-     * 由 ray.h 中的 P(t) = Q + td
-     * 得 (C - (Q + td))·(C - (Q + td)) = r^2
-     * 其中 t 为未知数，展开得 (d·d)t^2 + (-2d·(C-Q))t + (C-Q)·(C-Q) - r^2 = 0
-     * 二元一次方程 b^2 - 4ac >= 0 时有解，说明光线击中球体
-     */
-    vec3 oc = center - r.origin();
-    // auto a = dot(r.direction(), r.direction());
-    // auto b = -2.0 * dot(r.direction(), oc);
-    // auto c = dot(oc, oc) - radius * radius;
-    // auto discriminant = b * b - 4 * a * c;
-    // 将 b = -2h 代入简化求根公式
-    auto a = r.direction().length_squared();
-    auto h = dot(r.direction(), oc);
-    auto c = oc.length_squared() - radius * radius;
-    auto discriminant = h * h - a * c;
-
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (h - sqrt(discriminant)) / a;
-    }
-}
-
-color ray_color(const ray &r) {
-    // 获取光线击中球体的位置 t，球心坐标为 (0,0,-1)，半径为0.5
-    auto t = hit_sphere(point3(0, 0, -1), 0.5, r);
-    if (t > 0.0) {
-        // 单位法向量
-        vec3 N = unit_vector(r.at(t) - vec3(0, 0, -1));
-        // 根据球面法向量进行着色
-        return 0.5 * color(N.x() + 1, N.y() + 1, N.z() + 1);
+color ray_color(const ray &r, const hittable_list &world) {
+    hit_record rec;
+    // 击中球面的光线，根据法向量对相应球体着色
+    if (world.hit(r, 0, infinity, rec)) {
+        // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
+        return 0.5 * (rec.normal + color(1, 1, 1));
     }
 
-    // 颜色根据高度 y 线性渐变
+    // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
     // -1.0 < y < 1.0
     vec3 unit_direction = unit_vector(r.direction());
     // 0.0 < a < 1.0
     auto a = 0.5 * (unit_direction.y() + 1.0);
+    // 线性渐变
     return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
 }
 
@@ -63,6 +30,11 @@ int main() {
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
+
+    // World
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0,0,-1),0.5));
+    world.add(make_shared<sphere>(point3(0,-100.5,-1),100));
 
     // Camera
     auto focal_length = 1.0;
@@ -92,7 +64,7 @@ int main() {
             auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
             auto ray_direction = pixel_center - camera_center;
             ray r(camera_center, ray_direction);
-            color pixel_color = ray_color(r);
+            color pixel_color = ray_color(r, world);
             write_color(std::cout, outfile, pixel_color);
         }
     }
