@@ -8,7 +8,7 @@
 color ray_color(const ray &r, const hittable_list &world) {
     hit_record rec;
     // 击中球面的光线，根据法向量对相应球体着色
-    if (world.hit(r, 0, infinity, rec)) {
+    if (world.hit(r, interval(0, infinity), rec)) {
         // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
         return 0.5 * (rec.normal + color(1, 1, 1));
     }
