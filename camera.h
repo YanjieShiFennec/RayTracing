@@ -98,8 +98,8 @@ private:
         // 击中球面的光线
         // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            // 模拟哑光材料漫反射
-            vec3 direction = random_on_hemisphere(rec.normal);
+            // 模拟哑光材料漫反射，Lambertian distribution
+            vec3 direction = rec.normal + random_unit_vector();
             // 每次反射 50% 的颜色，不断迭代至没有击中物体为止
             return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);
         }
