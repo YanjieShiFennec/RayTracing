@@ -15,7 +15,7 @@ public:
     int image_width = 100;      // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
 
-    void render(const hittable &world, const string& file_name) {
+    void render(const hittable &world, const string &file_name) {
         initialize();
 
         // Render
@@ -54,7 +54,7 @@ private:
 
         // Determine viewport dimensions.
         auto focal_length = 1.0;
-        auto viewport_height = 2.0;
+        auto viewport_height = 2.0; // 视窗高度，数值越大包含的画面范围越大
         auto viewport_width = viewport_height * (double(image_width) / image_height);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges
@@ -90,10 +90,12 @@ private:
 
     color ray_color(const ray &r, const hittable &world) const {
         hit_record rec;
-        // 击中球面的光线，根据法向量对相应球体着色
+        // 击中球面的光线
         if (world.hit(r, interval(0, infinity), rec)) {
-            // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
-            return 0.5 * (rec.normal + color(1, 1, 1));
+            // 模拟哑光材料漫反射
+            vec3 direction = random_on_hemisphere(rec.normal);
+            // 每次反射 50% 的颜色，不断迭代至没有击中物体为止
+            return 0.5 * ray_color(ray(rec.p, direction), world);
         }
 
         // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
