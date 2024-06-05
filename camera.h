@@ -8,6 +8,7 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
+#include "material.h"
 
 class camera {
 public:
@@ -95,15 +96,14 @@ private:
             return color(0, 0, 0);
 
         hit_record rec;
-        // 击中球面的光线，模拟哑光材料漫反射
+        // 击中球面的光线
         // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
         if (world.hit(r, interval(0.001, infinity), rec)) {
-            // 随机方向反射
-            // vec3 direction = random_on_hemisphere(rec.normal);
-            // 根据 Lambertian distribution 生成反射方向
-            vec3 direction = rec.normal + random_unit_vector();
-            // 每次反射 50% 的颜色，不断迭代至没有击中物体为止
-            return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);
+            ray scattered;
+            color attenuation;
+            if (rec.mat->scatter(r, rec, attenuation, scattered))
+                return attenuation * ray_color(scattered, depth - 1, world);
+            return color(0, 0, 0);
         }
 
         // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
