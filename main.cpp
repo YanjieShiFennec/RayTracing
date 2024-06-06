@@ -14,15 +14,25 @@ int main() {
     // 设置球体
     hittable_list world;
 
-    auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
-    auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
-    auto material_left = make_shared<dielectric>(1.0/1.33); // 模拟水中的空气泡触发全反射效果，水的折射率为 1.33
-    auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+    auto R = cos(pi/4);
 
-    world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100, material_ground));
-    world.add(make_shared<sphere>(point3(0.0, 0.0, -1.2), 0.5, material_center));
-    world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
-    world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
+    auto material_left = make_shared<lambertian>(color(0,0,1));
+    auto material_right = make_shared<lambertian>(color(1,0,0));
+
+    world.add(make_shared<sphere>(point3(-R,0,-1),R,material_left));
+    world.add(make_shared<sphere>(point3(R,0,-1),R,material_right));
+
+    // auto material_ground = make_shared<lambertian>(color(0.8, 0.8, 0.0));
+    // auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
+    // auto material_left = make_shared<dielectric>(1.5);
+    // auto material_bubble = make_shared<dielectric>(1.0/1.5); // 在 material_left 中嵌入 空气泡，material_left 即为空心玻璃球
+    // auto material_right = make_shared<metal>(color(0.8, 0.6, 0.2), 0.0);
+    //
+    // world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100, material_ground));
+    // world.add(make_shared<sphere>(point3(0.0, 0.0, -1.2), 0.5, material_center));
+    // world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
+    // world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, material_bubble));
+    // world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
 
     camera cam;
 
@@ -30,6 +40,8 @@ int main() {
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
     cam.max_depth = 50;
+
+    cam.vfov = 60;
 
     // 渲染计时
     clock_t start, end;

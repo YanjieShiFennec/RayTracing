@@ -17,6 +17,8 @@ public:
     int samples_per_pixel = 10; // Count of random samples for each pixel
     int max_depth = 10;         // Maximum number of ray bounces into scene
 
+    double vfov = 90;           // Vertical view angle (filed of view) 垂直可视角度
+
     void render(const hittable &world, const string &file_name) {
         initialize();
 
@@ -56,7 +58,9 @@ private:
 
         // Determine viewport dimensions.
         auto focal_length = 1.0;
-        auto viewport_height = 2.0; // 视窗高度，数值越大包含的画面范围越大
+        auto theta = degrees_to_radians(vfov);
+        auto h = tan(theta / 2);
+        auto viewport_height = 2 * h * focal_length; // 视窗高度，数值越大包含的画面范围越大
         auto viewport_width = viewport_height * (double(image_width) / image_height);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges
