@@ -6,6 +6,7 @@
 #define RT_CONSTANTS_H
 
 #include <cmath>
+#include <ctime>
 #include <random>
 #include <iostream>
 #include <limits>
