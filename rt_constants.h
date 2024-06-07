@@ -8,7 +8,6 @@
 #include <cmath>
 #include <random>
 #include <iostream>
-#include <fstream>
 #include <limits>
 #include <memory>
 
@@ -18,6 +17,7 @@ using std::shared_ptr;
 using std::sqrt;
 using std::string;
 using std::fabs;
+using std::cout;
 
 //Constants
 const double infinity = std::numeric_limits<double>::infinity();

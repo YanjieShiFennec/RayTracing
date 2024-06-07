@@ -50,11 +50,11 @@ int main() {
     clock_t start, end;
     start = clock();
 
-    string file_name = "PPMTest.ppm";
+    char file_name[] = "../RayTracing.png";
     cam.render(world, file_name);
 
     end = clock();
-    std::cout << "Time: " << double(end - start) / CLOCKS_PER_SEC << " s" << std::endl;
+    cout << "Time: " << double(end - start) / CLOCKS_PER_SEC << " s" << std::endl;
 
     return 0;
 }

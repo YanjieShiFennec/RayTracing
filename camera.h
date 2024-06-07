@@ -5,6 +5,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION  // 使第三方库 stb_image_write 成为可执行的源码
+
+#include "stb_image_write.h"    // https://github.com/nothings/stb
+
 #include "rt_constants.h"
 
 #include "hittable.h"
@@ -22,13 +26,12 @@ public:
     point3 lookat = point3(0, 0, -1);     // Point camera is looking at
     vec3 vup = vec3(0, 1, 0);             // Camera-relative "up" direction
 
-    void render(const hittable &world, const string &file_name) {
+    void render(const hittable &world, const char *file_name) {
         initialize();
 
         // Render
-        std::ofstream outfile("../" + file_name, std::ios_base::out);
-        outfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-        // std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+        int channels = 3;   // 3通道rgb
+        unsigned char *data = new unsigned char[image_width * image_height * channels];
         for (int j = 0; j < image_height; j++) {
             std::clog << "\rScan lines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++) {
@@ -37,9 +40,17 @@ public:
                     ray r = get_ray(i, j);
                     pixel_color += ray_color(r, max_depth, world);
                 }
-                write_color(std::cout, outfile, pixel_samples_scale * pixel_color);
+
+                int rgb[3];
+
+                write_color(rgb, pixel_samples_scale * pixel_color);
+                data[j * image_width * 3 + 3 * i] = rgb[0];
+                data[j * image_width * 3 + 3 * i + 1] = rgb[1];
+                data[j * image_width * 3 + 3 * i + 2] = rgb[2];
             }
         }
+        stbi_write_png(file_name, image_width, image_height, channels, data, 0);
+        delete[]data;
         std::clog << "\rDone.\n";
     }
 
