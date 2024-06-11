@@ -17,10 +17,18 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
+// __global__ 修饰的函数在 GPU 上执行，但是需要在 CPU 端调用
 __global__
 void render(unsigned char *data, int image_width, int image_height) {
-    for (int j = 0; j < image_height; j++) {
-        for (int i = 0; i < image_width; i++) {
+    // CUDA 参数
+    // blockId: 块索引, blockDim: 块内的线程数量, threadId: 线程索引, gridDim: 网格内的块数量.
+    int index_x = blockIdx.x * blockDim.x + threadIdx.x;
+    int index_y = blockIdx.y * blockDim.y + threadIdx.y;
+    int stride_x = blockDim.x * gridDim.x;
+    int stride_y = blockDim.y * gridDim.y;
+
+    for (int j = index_y; j < image_height; j += stride_y) {
+        for (int i = index_x; i < image_width; i += stride_x) {
             auto r = double(i) / (image_width - 1);
             auto g = double(j) / (image_height - 1);
             auto b = 0.0;
@@ -29,9 +37,10 @@ void render(unsigned char *data, int image_width, int image_height) {
             int ig = int(255.999 * g);
             int ib = int(255.999 * b);
 
-            data[j * image_width * 3 + 3 * i] = ir;
-            data[j * image_width * 3 + 3 * i + 1] = ig;
-            data[j * image_width * 3 + 3 * i + 2] = ib;
+            int pixel_index = j * image_width * 3 + 3 * i;
+            data[pixel_index] = ir;
+            data[pixel_index + 1] = ig;
+            data[pixel_index + 2] = ib;
         }
     }
 }
@@ -41,9 +50,11 @@ int main() {
     // Image
     int image_width = 256;
     int image_height = 256;
+    int tx = 8; // 线程数量，对应 image_width
+    int ty = 8; // 线程数量，对应 image_height
 
     // Render
-    int channels = 3; // 3通道rgb
+    int channels = 3; // 3通道 rgb
     unsigned char *data;
     size_t data_size = channels * image_width * image_height * sizeof(unsigned char);
     // 申请统一内存，允许 GPU 和 CPU 访问
@@ -52,13 +63,15 @@ int main() {
     clock_t start, stop;
     start = clock();
 
-    render<<<1, 1>>>(data, image_width, image_height);
+    dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
+    dim3 threads(tx, ty);
+    render<<<blocks, threads>>>(data, image_width, image_height);
     checkCudaErrors(cudaGetLastError());
     // 等待 GPU 执行完成
     checkCudaErrors(cudaDeviceSynchronize());
 
     stop = clock();
-    double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
+    double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "Took " << timer_seconds << " seconds.\n";
 
     stbi_write_png("../RayTracing.png", image_width, image_height, channels, data, 0);
