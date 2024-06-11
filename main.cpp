@@ -1,3 +1,6 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION  // 使第三方库 stb_image_write 成为可执行的源码
+
+#include "stb_image_write.h"    // https://github.com/nothings/stb
 #include <iostream>
 #include <fstream>
 
@@ -9,9 +12,8 @@ int main() {
     int image_height = 256;
 
     // Render
-    std::ofstream outfile("../PPMTest.ppm", std::ios_base::out);
-    outfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
-    // std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+    int channels = 3;   // 3通道rgb
+    unsigned char *data = new unsigned char[image_width * image_height * channels];
     for (int j = 0; j < image_height; j++) {
         std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
         for (int i = 0; i < image_width; i++) {
@@ -23,10 +25,13 @@ int main() {
             int ig = int(255.999 * g);
             int ib = int(255.999 * b);
 
-            outfile << ir << ' ' << ig << ' ' << ib << '\n';
-            // std::cout << ir << ' ' << ig << ' ' << ib << '\n';
+            data[j * image_width * 3 + 3 * i] = ir;
+            data[j * image_width * 3 + 3 * i + 1] = ig;
+            data[j * image_width * 3 + 3 * i + 2] = ib;
         }
     }
+    stbi_write_png("../RayTracing.png", image_width, image_height, channels, data, 0);
+    delete[]data;
     std::clog << "\rDone.\n";
     return 0;
 }
