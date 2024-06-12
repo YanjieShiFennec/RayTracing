@@ -3,6 +3,8 @@
 #include "stb_image_write.h"    // https://github.com/nothings/stb
 #include <iostream>
 #include <ctime>
+#include "vec3.h"
+#include "color.h"
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
@@ -17,9 +19,11 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
+const int channels = 3; // 3通道 rgb
+const char filename[] = "../RayTracing.png";
+
 // __global__ 修饰的函数在 GPU 上执行，但是需要在 CPU 端调用
-__global__
-void render(unsigned char *data, int image_width, int image_height) {
+__global__ void render(unsigned char *data, int image_width, int image_height) {
     // CUDA 参数
     // blockId: 块索引, blockDim: 块内的线程数量, threadId: 线程索引, gridDim: 网格内的块数量.
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -29,22 +33,12 @@ void render(unsigned char *data, int image_width, int image_height) {
 
     for (int j = index_y; j < image_height; j += stride_y) {
         for (int i = index_x; i < image_width; i += stride_x) {
-            float r = float(i) / (image_width - 1);
-            float g = float(j) / (image_height - 1);
-            float b = 0.0;
-
-            int ir = int(255.999 * r);
-            int ig = int(255.999 * g);
-            int ib = int(255.999 * b);
-
-            int pixel_index = j * image_width * 3 + 3 * i;
-            data[pixel_index] = ir;
-            data[pixel_index + 1] = ig;
-            data[pixel_index + 2] = ib;
+            auto pixel_color = color(float(i) / (image_width - 1), float(j) / (image_height - 1), 0.0);
+            int pixel_index = channels * (j * image_width + i);
+            write_color(data, pixel_index, pixel_color);
         }
     }
 }
-
 
 int main() {
     // Image
@@ -54,7 +48,6 @@ int main() {
     int ty = 8; // 线程数量，对应 image_height
 
     // Render
-    int channels = 3; // 3通道 rgb
     unsigned char *data;
     size_t data_size = channels * image_width * image_height * sizeof(unsigned char);
     // 申请统一内存，允许 GPU 和 CPU 访问
@@ -74,7 +67,7 @@ int main() {
     double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "Took " << timer_seconds << " seconds.\n";
 
-    stbi_write_png("../RayTracing.png", image_width, image_height, channels, data, 0);
+    stbi_write_png(filename, image_width, image_height, channels, data, 0);
     // 释放内存
     checkCudaErrors(cudaFree(data));
     return 0;
