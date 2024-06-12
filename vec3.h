@@ -56,7 +56,7 @@ public:
     }
 };
 
-// point3 is just an alas for vec3, but useful for geometric clarity in the code.
+// point3 is just an alias for vec3, but useful for geometric clarity in the code.
 using point3 = vec3;
 
 // Vector Utility Functions
@@ -90,9 +90,9 @@ __host__ __device__ inline vec3 operator/(const vec3 &v, float t) {
 
 // 向量内积/点乘
 __host__ __device__ inline float dot(const vec3 &u, const vec3 &v) {
-    return u.e[0] + v.e[0]
-           + u.e[1] + v.e[1]
-           + u.e[2] + v.e[2];
+    return u.e[0] * v.e[0]
+           + u.e[1] * v.e[1]
+           + u.e[2] * v.e[2];
 }
 
 // 向量外积
