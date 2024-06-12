@@ -29,9 +29,9 @@ void render(unsigned char *data, int image_width, int image_height) {
 
     for (int j = index_y; j < image_height; j += stride_y) {
         for (int i = index_x; i < image_width; i += stride_x) {
-            auto r = double(i) / (image_width - 1);
-            auto g = double(j) / (image_height - 1);
-            auto b = 0.0;
+            float r = float(i) / (image_width - 1);
+            float g = float(j) / (image_height - 1);
+            float b = 0.0;
 
             int ir = int(255.999 * r);
             int ig = int(255.999 * g);
