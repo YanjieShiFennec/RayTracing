@@ -23,7 +23,31 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 const int channels = 3; // 3通道 rgb
 const char filename[] = "../RayTracing.png";
 
+__device__ bool hit_sphere(const point3 &center, float radius, const ray &r) {
+    /*
+     * 球体公式：x^2 + y^2 + z^2 = r^2
+     * 设球心坐标为 C = (Cx,Cy,Cz)，球面上一点坐标为 P = (x,y,z)
+     * 则 (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2 = r^2
+     * 根据向量内积公式 (C-P)·(C-P) = (Cx - x)^2 + (Cy - y)^2 + (Cz - z)^2
+     * 得 (C-P)·(C-P) = r^2（·代表向量内积）
+     * 由 ray.h 中的 P(t) = Q + td
+     * 得 (C - (Q + td))·(C - (Q + td)) = r^2
+     * 其中 t 为未知数，展开得 (d·d)t^2 + (-2d·(C-Q))t + (C-Q)·(C-Q) - r^2 = 0
+     * 二元一次方程 b^2 - 4ac >= 0 时有解，说明光线击中球体
+     */
+    vec3 oc = center - r.origin();
+    float a = dot(r.direction(), r.direction());
+    float b = -2.0f * dot(r.direction(), oc);
+    float c = dot(oc, oc) - radius * radius;
+    float discriminant = b * b - 4.0f * a * c;
+    return (discriminant >= 0);
+}
+
 __device__ color ray_color(const ray &r) {
+    // 判断光线是否击中球体，球心坐标为 (0,0,-1)，半径为0.5
+    if (hit_sphere(point3(0, 0, -1), 0.5, r))
+        return color(1, 1, 0);
+
     // 颜色根据高度 y 线性渐变
     // -1.0 < y < 1.0
     vec3 unit_direction = unit_vector(r.direction());
@@ -34,7 +58,7 @@ __device__ color ray_color(const ray &r) {
 
 // __global__ 修饰的函数在 GPU 上执行，但是需要在 CPU 端调用
 __global__ void render(unsigned char *data, int image_width, int image_height,
-    point3 pixel00_loc, vec3 pixel_delta_u, vec3 pixel_delta_v, point3 camera_center) {
+                       point3 pixel00_loc, vec3 pixel_delta_u, vec3 pixel_delta_v, point3 camera_center) {
     // CUDA 参数
     // blockId: 块索引, blockDim: 块内的线程数量, threadId: 线程索引, gridDim: 网格内的块数量.
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -96,7 +120,8 @@ int main() {
     int ty = 8; // 线程数量，对应 image_height
     dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
     dim3 threads(tx, ty);
-    render<<<blocks, threads>>>(data, image_width, image_height, pixel00_loc, pixel_delta_u, pixel_delta_v, camera_center);
+    render<<<blocks, threads>>>(data, image_width, image_height, pixel00_loc, pixel_delta_u, pixel_delta_v,
+                                camera_center);
     checkCudaErrors(cudaGetLastError());
     // 等待 GPU 执行完成
     checkCudaErrors(cudaDeviceSynchronize());
