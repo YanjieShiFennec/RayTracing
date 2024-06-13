@@ -19,7 +19,7 @@ public:
 
 private:
     // P(t) = Q + td（Q 为 orig，d 为 dir）
-    // 根据输入 t 确定最终光线到达的点 P
+    // 根据输入 t 确定最终光线到达的点 P: point3 at(double t)
     point3 orig; // 光源坐标
     vec3 dir; // 光线方向
 };
