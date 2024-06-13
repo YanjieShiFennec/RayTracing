@@ -5,6 +5,7 @@
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "camera.h"
 
 __device__ color ray_color(const ray &r, hittable_list **d_world) {
     hit_record rec;
@@ -24,9 +25,7 @@ __device__ color ray_color(const ray &r, hittable_list **d_world) {
 }
 
 // __global__ 修饰的函数在 GPU 上执行，但是需要在 CPU 端调用
-__global__ void render(unsigned char *data, int image_width, int image_height,
-                       point3 pixel00_loc, vec3 pixel_delta_u, vec3 pixel_delta_v, point3 camera_center,
-                       hittable_list **d_world) {
+__global__ void render(unsigned char *data, camera **cam, hittable_list **d_world) {
     // CUDA 参数
     // blockId: 块索引, blockDim: 块内的线程数量, threadId: 线程索引, gridDim: 网格内的块数量.
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -34,13 +33,14 @@ __global__ void render(unsigned char *data, int image_width, int image_height,
     int stride_x = blockDim.x * gridDim.x;
     int stride_y = blockDim.y * gridDim.y;
 
-    for (int j = index_y; j < image_height; j += stride_y) {
-        for (int i = index_x; i < image_width; i += stride_x) {
-            auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-            auto ray_direction = pixel_center - camera_center;
-            ray r(camera_center, ray_direction);
+    for (int j = index_y; j < cam[0]->get_image_height(); j += stride_y) {
+        for (int i = index_x; i < cam[0]->get_image_width(); i += stride_x) {
+            auto pixel_center = cam[0]->get_pixel00_loc() + (i * cam[0]->get_pixel_delta_u()) + (
+                                    j * cam[0]->get_pixel_delta_v());
+            auto ray_direction = pixel_center - cam[0]->get_camera_center();
+            ray r(cam[0]->get_camera_center(), ray_direction);
             color pixel_color = ray_color(r, d_world);
-            int pixel_index = channels * (j * image_width + i);
+            int pixel_index = channels * (j * cam[0]->get_image_width() + i);
             write_color(data, pixel_index, pixel_color);
         }
     }
@@ -55,6 +55,12 @@ __global__ void create_world(hittable **d_list, hittable_list **d_world) {
     }
 }
 
+__global__ void create_camera(camera **cam, float aspect_ratio, int image_width) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        cam[0] = new camera(aspect_ratio,image_width);
+    }
+}
+
 int main() {
     // Image
     float aspect_ratio = 16.0f / 9.0f;
@@ -64,6 +70,13 @@ int main() {
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
 
+    // Camera
+    camera **cam;
+    checkCudaErrors(cudaMallocManaged(&cam, sizeof(camera*)));
+    create_camera<<<1, 1>>>(cam, aspect_ratio, image_width);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
     // World
     hittable **d_list;
     checkCudaErrors(cudaMallocManaged(&d_list, 2*sizeof(hittable*)));
@@ -72,24 +85,6 @@ int main() {
     create_world<<<1, 1>>>(d_list, d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-
-    // Camera
-    float focal_length = 1.0;
-    float viewport_height = 2.0;
-    float viewport_width = viewport_height * (float(image_width) / image_height);
-    auto camera_center = point3(0, 0, 0);
-
-    // Calculate the vectors across the horizontal and down the vertical viewport edges
-    auto viewport_u = vec3(viewport_width, 0, 0);
-    auto viewport_v = vec3(0, -viewport_height, 0);
-
-    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
-    auto pixel_delta_u = viewport_u / image_width;
-    auto pixel_delta_v = viewport_v / image_height;
-
-    // Calculate the location of the upper left pixel.
-    auto viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
-    auto pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     // Render
     unsigned char *data;
@@ -105,8 +100,7 @@ int main() {
     int ty = 8; // 线程数量，对应 image_height
     dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
     dim3 threads(tx, ty);
-    render<<<blocks, threads>>>(data, image_width, image_height, pixel00_loc, pixel_delta_u, pixel_delta_v,
-                                camera_center, d_world);
+    render<<<blocks, threads>>>(data, cam, d_world);
     checkCudaErrors(cudaGetLastError());
     // 等待 GPU 执行完成
     checkCudaErrors(cudaDeviceSynchronize());
@@ -118,6 +112,7 @@ int main() {
     stbi_write_png(filename, image_width, image_height, channels, data, 0);
 
     // 释放内存
+    checkCudaErrors(cudaFree(cam));
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(data));
