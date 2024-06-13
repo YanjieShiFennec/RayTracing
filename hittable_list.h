@@ -9,14 +9,23 @@ class hittable_list : public hittable {
 public:
     hittable **objects;
     int size;
+    int allocated_size;
 
     __device__ hittable_list() {
     }
 
-    __device__ hittable_list(hittable **objects, int size): objects(objects), size(size) {
+    __device__ hittable_list(hittable **objects, int size): objects(objects), size(size), allocated_size(size) {
     }
 
     __device__ void add(hittable *object) {
+        if (allocated_size <= size) {
+            hittable **new_objects = new hittable *[size * 2];
+            for (int i = 0; i < size; i++) {
+                new_objects[i] = objects[i];
+            }
+            objects = new_objects;
+            allocated_size = size * 2;
+        }
         objects[size++] = object;
     }
 
