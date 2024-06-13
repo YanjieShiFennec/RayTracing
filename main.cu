@@ -9,7 +9,7 @@
 __device__ color ray_color(const ray &r, hittable_list **d_world) {
     hit_record rec;
     // 击中球面的光线，根据法向量对相应球体着色
-    if (d_world[0]->hit(r, 0, infinity, rec)) {
+    if (d_world[0]->hit(r, interval(0, infinity), rec)) {
         // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
         return 0.5f * (rec.normal + color(1, 1, 1));
     }

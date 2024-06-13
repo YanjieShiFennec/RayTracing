@@ -14,7 +14,7 @@ public:
     __device__ sphere(const point3 &center, float radius) : center(center), radius(fmax(0.0f, radius)) {
     }
 
-    __device__ bool hit(const ray &r, float ray_tmin, float ray_tmax, hit_record &rec) const override {
+    __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
         /*
          * 球体公式：x^2 + y^2 + z^2 = r^2
          * 设球心坐标为 C = (Cx,Cy,Cz)，球面上一点坐标为 P = (x,y,z)
@@ -44,9 +44,9 @@ public:
         float sqrtd = sqrt(discriminant);
         // Find the nearest root that lies in the acceptable range.
         float root = (h - sqrtd) / a;
-        if (root <= ray_tmin || root >= ray_tmax) {
+        if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
-            if (root <= ray_tmin || root >= ray_tmax) {
+            if (!ray_t.surrounds(root)) {
                 return false;
             }
         }

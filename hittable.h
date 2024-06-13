@@ -24,7 +24,7 @@ public:
     virtual ~hittable() = default;
 
     // = 0，纯虚函数，无实现
-    __device__ virtual bool hit(const ray &r, float ray_tmin, float ray_tmax, hit_record &rec) const = 0;
+    __device__ virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const = 0;
 };
 
 #endif // HITTABLE_H
