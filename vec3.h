@@ -155,4 +155,13 @@ __device__ inline vec3 random_on_hemisphere(const vec3 &normal, curandState &ran
 __device__ inline vec3 reflect(const vec3 &v, const vec3 &n) {
     return v - 2 * dot(v, n) * n;
 }
+
+// 折射
+// uv 为入射光线，n 为介质平面法向量，etai_over_etat 为入射介质的折射率与折射介质的折射率之比
+__device__ inline vec3 refract(const vec3 &uv, const vec3 &n, float etai_over_etat) {
+    auto cos_theta = fminf(dot(-uv, n), 1.0f);
+    vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
+    vec3 r_out_parallel = -sqrtf(fabsf(1.0f - r_out_perp.length_squared())) * n;
+    return r_out_perp + r_out_parallel;
+}
 #endif // VEC3_H

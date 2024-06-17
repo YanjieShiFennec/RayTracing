@@ -39,7 +39,7 @@ __global__ void create_world(hittable **d_list, hittable_list **d_world) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         auto material_ground = new lambertian(color(0.8, 0.8, 0.0));
         auto material_center = new lambertian(color(0.1, 0.2, 0.5));
-        auto material_left = new metal(color(0.8, 0.8, 0.8), 0.0);
+        auto material_left = new dielectric(1.5);
         auto material_right = new metal(color(0.8, 0.6, 0.2), 0.0);
 
         d_list[0] = new sphere(point3(0, -100.5, -1), 100, material_ground);
