@@ -11,7 +11,7 @@ public:
     int size;
     int allocated_size;
 
-    __device__ hittable_list() {
+    __device__ hittable_list(): objects(new hittable *[1]), size(0), allocated_size(1) {
     }
 
     __device__ hittable_list(hittable **objects, int size): objects(objects), size(size), allocated_size(size) {

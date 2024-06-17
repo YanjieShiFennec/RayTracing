@@ -35,19 +35,21 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
     }
 }
 
-__global__ void create_world(hittable **d_list, hittable_list **d_world) {
+__global__ void create_world(hittable_list **d_world) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         auto material_ground = new lambertian(color(0.8, 0.8, 0.0));
         auto material_center = new lambertian(color(0.1, 0.2, 0.5));
-        auto material_left = new dielectric(1.0 / 1.33); // 模拟水中的空气泡触发全反射效果，水的折射率为 1.33
+        auto material_left = new dielectric(1.5f);
+        auto material_bubble = new dielectric(1.0f / 1.5f);
         auto material_right = new metal(color(0.8, 0.6, 0.2), 0.0);
 
-        d_list[0] = new sphere(point3(0, -100.5, -1), 100, material_ground);
-        d_list[1] = new sphere(point3(0, 0, -1.2), 0.5, material_center);
-        d_list[2] = new sphere(point3(-1, 0, -1), 0.5, material_left);
-        d_list[3] = new sphere(point3(1, 0, -1), 0.5, material_right);
-        d_world[0] = new hittable_list(d_list, 4);
-        // d_world[0]->add(new sphere(point3(0, 1, -1), 0.5));
+        d_world[0] = new hittable_list();
+        d_world[0]->add(new sphere(point3(0, -100.5, -1), 100, material_ground));
+        d_world[0]->add(new sphere(point3(0, 0, -1.2), 0.5, material_center));
+        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.5, material_left));
+        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.4, material_bubble));
+        d_world[0]->add(new sphere(point3(1, 0, -1), 0.5, material_right));
+        // d_world[0] = new hittable_list(d_list, sphere_num);
     }
 }
 
@@ -97,11 +99,9 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
 
     // World
-    hittable **d_list;
-    checkCudaErrors(cudaMallocManaged(&d_list, 4*sizeof(hittable*)));
     hittable_list **d_world;
     checkCudaErrors(cudaMallocManaged(&d_world, sizeof(hittable_list*)));
-    create_world<<<1, 1>>>(d_list, d_world);
+    create_world<<<1, 1>>>(d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -137,7 +137,6 @@ int main() {
     // 释放内存
     checkCudaErrors(cudaFree(d_cam));
     checkCudaErrors(cudaFree(d_rand_state));
-    checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(data));
     return 0;
