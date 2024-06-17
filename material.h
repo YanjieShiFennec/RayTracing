@@ -64,17 +64,27 @@ private:
 // 电介质，产生折射
 class dielectric : public material {
 public:
-    __device__ dielectric(float refraction_index) : refraction_index(refraction_index) {}
+    __device__ dielectric(float refraction_index) : refraction_index(refraction_index) {
+    }
 
-    __device__ bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered, curandState &rand_state)
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered,
+                            curandState &rand_state)
     const override {
-        attenuation = color(1.0, 1.0, 1.0);
+        attenuation = color(1.0, 1.0, 1.0); // 玻璃表面不吸收光线
         float ri = rec.front_face ? (1.0f / refraction_index) : refraction_index;
 
         vec3 unit_direction = unit_vector(r_in.direction());
-        vec3 refracted = refract(unit_direction, rec.normal, ri);
+        float cos_theta = fminf(dot(-unit_direction, rec.normal), 1.0f);
+        float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
 
-        scattered = ray(rec.p, refracted);
+        bool cannot_refract = ri * sin_theta > 1.0; // 折射还是全反射
+        vec3 direction;
+        if (cannot_refract)
+            direction = reflect(unit_direction, rec.normal);
+        else
+            direction = refract(unit_direction, rec.normal, ri);
+
+        scattered = ray(rec.p, direction);
         return true;
     }
 
