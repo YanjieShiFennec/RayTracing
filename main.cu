@@ -9,42 +9,6 @@
 
 #include <curand_kernel.h>
 
-__device__ color ray_color(const ray &r, hittable_list **d_world) {
-    hit_record rec;
-    // 击中球面的光线，根据法向量对相应球体着色
-    if (d_world[0]->hit(r, interval(0, infinity), rec)) {
-        // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
-        return 0.5f * (rec.normal + color(1, 1, 1));
-    }
-
-    // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
-    // -1.0 < y < 1.0
-    vec3 unit_direction = unit_vector(r.direction());
-    // 0.0 < a < 1.0
-    float a = 0.5f * (unit_direction.y() + 1.0f);
-    // 线性渐变
-    return (1.0f - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
-}
-
-__device__ vec3 sample_square(curandState &local_rand_state) {
-    // Returns the vector to a random point in the [-0.5, -0.5]-[+0.5, +0,5] unit square.
-    return vec3(curand_uniform(&local_rand_state) - 0.5, curand_uniform(&local_rand_state) - 0.5, 0);
-}
-
-__device__ ray get_ray(int i, int j, camera **cam, curandState &local_rand_state) {
-    // Construct a camera ray originating from the origin and directed at randomly sampled
-    // point around the pixel, location i, j.
-
-    auto offset = sample_square(local_rand_state);
-    auto pixel_sample = cam[0]->get_pixel00_loc()
-                        + ((i + offset.x()) * cam[0]->get_pixel_delta_u())
-                        + ((j + offset.y()) * cam[0]->get_pixel_delta_v());
-
-    auto ray_origin = cam[0]->get_camera_center();
-    auto ray_direction = pixel_sample - ray_origin;
-    return ray(ray_origin, ray_direction);
-}
-
 // __global__ 修饰的函数在 GPU 上执行，但是需要在 CPU 端调用
 __global__ void render(unsigned char *data, camera **cam, hittable_list **d_world, curandState *rand_state) {
     // CUDA 参数
@@ -62,8 +26,8 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
             // printf("%d %d\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
 
             for (int sample = 0; sample < cam[0]->samples_per_pixel; sample++) {
-                ray r = get_ray(i, j, cam, local_rand_state);
-                pixel_color += ray_color(r, d_world);
+                ray r = camera::get_ray(i, j, cam, local_rand_state);
+                pixel_color += camera::ray_color(r, d_world);
             }
             write_color(data, pixel_index, pixel_color * cam[0]->get_pixel_samples_scale());
         }
