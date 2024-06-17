@@ -46,8 +46,8 @@ public:
             hit_record rec;
             // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
             if (d_world[0]->hit(cur_ray, interval(0.001f, infinity), rec)) {
-                // 模拟哑光材料漫反射
-                vec3 direction = random_on_hemisphere(rec.normal, rand_state);
+                // 模拟哑光材料漫反射，Lambertian distribution
+                vec3 direction = rec.normal + random_unit_vector(rand_state);
                 cur_attenuation *= 0.5f;
                 cur_ray = ray(rec.p, direction);
             } else {
