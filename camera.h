@@ -9,21 +9,19 @@ class camera {
 public:
     float aspect_ratio = 1.0; // Ratio of image width over height
     int image_width = 100; // Rendered image width in pixel count
+    int samples_per_pixel = 10; // Count of random samples for each pixel
 
-    __device__ camera(float aspect_ratio, int image_width): aspect_ratio(aspect_ratio), image_width(image_width) {
+    __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel): aspect_ratio(aspect_ratio),
+        image_width(image_width), samples_per_pixel(samples_per_pixel) {
         initialize();
-    }
-
-    __device__ float get_aspect_ratio() const {
-        return aspect_ratio;
-    }
-
-    __device__ int get_image_width() const {
-        return image_width;
     }
 
     __device__ int get_image_height() const {
         return image_height;
+    }
+
+    __device__ float get_pixel_samples_scale() const {
+        return pixel_samples_scale;
     }
 
     __device__ point3 get_camera_center() const {
@@ -44,6 +42,7 @@ public:
 
 private:
     int image_height; // Rendered image height
+    float pixel_samples_scale; // Color scale factor for a sum of pixel samples
     point3 camera_center; // Camera center
     point3 pixel00_loc; // Location of pixel (0, 0)
     vec3 pixel_delta_u; // Offset to pixel to the right
@@ -52,6 +51,8 @@ private:
     __device__ void initialize() {
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
+
+        pixel_samples_scale = 1.0f / samples_per_pixel;
 
         camera_center = point3(0, 0, 0);
 
