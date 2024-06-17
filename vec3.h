@@ -1,7 +1,6 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include <cmath>
 #include <iostream>
 
 #include "rt_constants.h"
@@ -57,6 +56,12 @@ public:
 
     __host__ __device__ float length_squared() const {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+    }
+
+    __device__ bool near_zero() const {
+        // Return true if the vector is close to zero in all dimensions.
+        float s = 1e-8;
+        return (fabsf(e[0]) < s) && (fabsf(e[1]) < s) && (fabsf(e[2]) < s);
     }
 
     __device__ static vec3 random(curandState &rand_state) {
