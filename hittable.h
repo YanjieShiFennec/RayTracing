@@ -3,10 +3,14 @@
 
 #include "rt_constants.h"
 
+// hittable.h 和 material.h 构成循环依赖，使用前向声明
+class material;
+
 class hit_record {
 public:
     point3 p; // 光线击中球面的坐标点
     vec3 normal; // 法向量，这里定义其方向总是与光线方向相反
+    material *mat; // 物体材质，前向声明必须使用指针
     float t; // 与光源的距离
     bool front_face; // true 代表光源在球面外部
 

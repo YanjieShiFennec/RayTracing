@@ -1,7 +1,6 @@
 #ifndef RT_CONSTANTS_H
 #define RT_CONSTANTS_H
 
-#include <cmath>
 #include <iostream>
 #include <ctime>
 #include <limits>
@@ -19,9 +18,6 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
         exit(99);
     }
 }
-
-// C++ Std Usings
-using std::sqrt;
 
 // Constants
 const int channels = 3; // 3通道 rgb

@@ -8,6 +8,7 @@
 class sphere : public hittable {
 public:
     __device__ sphere(const point3 &center, float radius) : center(center), radius(fmax(0.0f, radius)) {
+        // TODO: Initialize the material pointer 'mat'.
     }
 
     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
@@ -52,6 +53,7 @@ public:
         // 获取指向球面外的法向量
         vec3 outward_normal = (rec.p - center) / radius;
         rec.set_face_normal(r, outward_normal);
+        rec.mat = mat;
 
         return true;
     }
@@ -59,6 +61,7 @@ public:
 private:
     point3 center;
     float radius;
+    material *mat;
 };
 
 #endif // SPHERE_H
