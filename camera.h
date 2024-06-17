@@ -2,7 +2,6 @@
 #define CAMERA_H
 
 #include "rt_constants.h"
-#include <curand_kernel.h>
 #include "hittable.h"
 
 class camera {
@@ -40,26 +39,34 @@ public:
         return pixel_delta_v;
     }
 
-    __device__ static color ray_color(const ray &r, hittable_list **d_world) {
-        hit_record rec;
-        // 击中球面的光线，根据法向量对相应球体着色
-        if (d_world[0]->hit(r, interval(0, infinity), rec)) {
-            // 法向量区间 [-1, 1]，需变换区间至 [0, 1]
-            return 0.5f * (rec.normal + color(1, 1, 1));
+    __device__ static color ray_color(const ray &r, int depth, hittable_list **d_world, curandState &rand_state) {
+        ray cur_ray = r;
+        float cur_attenuation = 1.0f;
+        for (int i = 0; i < depth; i++) {
+            hit_record rec;
+            // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
+            if (d_world[0]->hit(cur_ray, interval(0.001f, infinity), rec)) {
+                // 模拟哑光材料漫反射
+                vec3 direction = random_on_hemisphere(rec.normal, rand_state);
+                cur_attenuation *= 0.5f;
+                cur_ray = ray(rec.p, direction);
+            } else {
+                // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
+                // -1.0 < y < 1.0
+                vec3 unit_direction = unit_vector(r.direction());
+                // 0.0 < a < 1.0
+                float a = 0.5f * (unit_direction.y() + 1.0f);
+                // 线性渐变
+                vec3 c = (1.0f - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+                return cur_attenuation * c;
+            }
         }
-
-        // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
-        // -1.0 < y < 1.0
-        vec3 unit_direction = unit_vector(r.direction());
-        // 0.0 < a < 1.0
-        float a = 0.5f * (unit_direction.y() + 1.0f);
-        // 线性渐变
-        return (1.0f - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+        return color(0, 0, 0);
     }
 
     __device__ static vec3 sample_square(curandState &local_rand_state) {
         // Returns the vector to a random point in the [-0.5, -0.5]-[+0.5, +0,5] unit square.
-        return vec3(curand_uniform(&local_rand_state) - 0.5, curand_uniform(&local_rand_state) - 0.5, 0);
+        return vec3(random_double(local_rand_state) - 0.5, random_double(local_rand_state) - 0.5, 0);
     }
 
     __device__ static ray get_ray(int i, int j, camera **cam, curandState &local_rand_state) {

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "rt_constants.h"
+
 using std::sqrt;
 
 class vec3 {
@@ -12,9 +14,11 @@ public:
 
     // __host__ 修饰的函数在 CPU 端调用，在 CPU 上执行
     // __device__ 修饰的函数在 GPU 端调用，在 GPU 上执行
-    __host__ __device__ vec3() : e{0, 0, 0} {}
+    __host__ __device__ vec3() : e{0, 0, 0} {
+    }
 
-    __host__ __device__ vec3(float e0, float e1, float e2) : e{e0, e1, e2} {}
+    __host__ __device__ vec3(float e0, float e1, float e2) : e{e0, e1, e2} {
+    }
 
     // const 修饰的是函数 x() 。表示该函数的函数体中的操作不会修改当前这个类的类对象。
     __host__ __device__ float x() const { return e[0]; }
@@ -53,6 +57,18 @@ public:
 
     __host__ __device__ float length_squared() const {
         return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
+    }
+
+    __device__ static vec3 random(curandState &rand_state) {
+        return vec3(random_double(rand_state),
+                    random_double(rand_state),
+                    random_double(rand_state));
+    }
+
+    __device__ static vec3 random(curandState &rand_state, float min, float max) {
+        return vec3(random_double(rand_state, min, max),
+                    random_double(rand_state, min, max),
+                    random_double(rand_state, min, max));
     }
 };
 
@@ -107,4 +123,26 @@ __host__ __device__ inline vec3 unit_vector(const vec3 &v) {
     return v / v.length();
 }
 
+__device__ inline vec3 random_in_unit_sphere(curandState &rand_state) {
+    while (true) {
+        auto p = vec3::random(rand_state, -1, 1);
+        if (p.length_squared() < 1)
+            return p;
+    }
+}
+
+// 生成随机方向的单位向量
+__device__ inline vec3 random_unit_vector(curandState &rand_state) {
+    return unit_vector(random_in_unit_sphere(rand_state));
+}
+
+// 从球体表面向外发射随机方向的光线
+__device__ inline vec3 random_on_hemisphere(const vec3 &normal, curandState &rand_state) {
+    vec3 on_unit_sphere = random_unit_vector(rand_state);
+    if (dot(on_unit_sphere, normal) > 0.0)
+        // 与球体法向量同向
+        return on_unit_sphere;
+    // 与球体法向量反向，反转
+    return -on_unit_sphere;
+}
 #endif // VEC3_H

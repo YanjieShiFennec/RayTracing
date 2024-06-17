@@ -5,6 +5,7 @@
 #include <iostream>
 #include <ctime>
 #include <limits>
+#include <curand_kernel.h>
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
@@ -34,6 +35,16 @@ const float pi = 3.1415926535897932385;
 // Utility Functions
 __host__ inline double degrees_to_radians(double degrees){
     return degrees * pi / 180;
+}
+
+__device__ inline float random_double(curandState &rand_state) {
+    // Returns a random real in (0, 1].
+    return curand_uniform(&rand_state);
+}
+
+__device__ inline float random_double(curandState &rand_state, float min, float max) {
+    // Returns a random real in (min, max].
+    return min + (max - min) * random_double(rand_state);
 }
 
 // Common Headers

@@ -27,7 +27,7 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
 
             for (int sample = 0; sample < cam[0]->samples_per_pixel; sample++) {
                 ray r = camera::get_ray(i, j, cam, local_rand_state);
-                pixel_color += camera::ray_color(r, d_world);
+                pixel_color += camera::ray_color(r, 50, d_world, local_rand_state);
             }
             write_color(data, pixel_index, pixel_color * cam[0]->get_pixel_samples_scale());
         }
