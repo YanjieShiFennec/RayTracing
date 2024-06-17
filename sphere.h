@@ -7,8 +7,7 @@
 
 class sphere : public hittable {
 public:
-    __device__ sphere(const point3 &center, float radius) : center(center), radius(fmax(0.0f, radius)) {
-        // TODO: Initialize the material pointer 'mat'.
+    __device__ sphere(const point3 &center, float radius, material *mat) : center(center), radius(fmaxf(0.0f, radius)), mat(mat) {
     }
 
     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {

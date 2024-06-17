@@ -150,4 +150,9 @@ __device__ inline vec3 random_on_hemisphere(const vec3 &normal, curandState &ran
     // 与球体法向量反向，反转
     return -on_unit_sphere;
 }
+
+// 镜面反射，v 为入射光线，n 为平面法向量
+__device__ inline vec3 reflect(const vec3 &v, const vec3 &n) {
+    return v - 2 * dot(v, n) * n;
+}
 #endif // VEC3_H
