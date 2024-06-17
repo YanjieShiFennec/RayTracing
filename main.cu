@@ -27,7 +27,7 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
 
             for (int sample = 0; sample < cam[0]->samples_per_pixel; sample++) {
                 ray r = camera::get_ray(i, j, cam, local_rand_state);
-                pixel_color += camera::ray_color(r, 50, d_world, local_rand_state);
+                pixel_color += camera::ray_color(r, cam[0]->max_depth, d_world, local_rand_state);
             }
             write_color(data, pixel_index, pixel_color * cam[0]->get_pixel_samples_scale());
         }
@@ -43,9 +43,9 @@ __global__ void create_world(hittable **d_list, hittable_list **d_world) {
     }
 }
 
-__global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel) {
+__global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel, int max_depth) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel);
+        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth);
         // printf("%d %f\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
     }
 }
@@ -67,10 +67,11 @@ __global__ void curand_init(curandState *rand_state, int image_width, int image_
 }
 
 int main() {
-    // Image
+    // Image / Camera
     float aspect_ratio = 16.0f / 9.0f;
     int image_width = 400;
     int samples_per_pixel = 100;
+    int max_depth = 50;
 
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
@@ -83,7 +84,7 @@ int main() {
     // Camera
     camera **d_cam;
     checkCudaErrors(cudaMallocManaged(&d_cam, sizeof(camera*)));
-    create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel);
+    create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel, max_depth);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 

@@ -9,9 +9,12 @@ public:
     float aspect_ratio = 1.0; // Ratio of image width over height
     int image_width = 100; // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
+    int max_depth = 10; // Maximum number of ray bounces into scene
 
-    __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel): aspect_ratio(aspect_ratio),
-        image_width(image_width), samples_per_pixel(samples_per_pixel) {
+    __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel,
+                      int max_depth): aspect_ratio(aspect_ratio),
+                                      image_width(image_width), samples_per_pixel(samples_per_pixel),
+                                      max_depth(max_depth) {
         initialize();
     }
 
@@ -42,11 +45,14 @@ public:
     __device__ static color ray_color(const ray &r, int depth, hittable_list **d_world, curandState &rand_state) {
         ray cur_ray = r;
         float cur_attenuation = 1.0f;
+        // 击中球面的光线，模拟哑光材料漫反射
         for (int i = 0; i < depth; i++) {
             hit_record rec;
             // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
             if (d_world[0]->hit(cur_ray, interval(0.001f, infinity), rec)) {
-                // 模拟哑光材料漫反射，Lambertian distribution
+                // 随机方向反射
+                // vec3 direction = random_on_hemisphere(rec.normal, rand_state);
+                // 根据 Lambertian distribution 生成反射方向
                 vec3 direction = rec.normal + random_unit_vector(rand_state);
                 cur_attenuation *= 0.5f;
                 cur_ray = ray(rec.p, direction);
@@ -61,6 +67,7 @@ public:
                 return cur_attenuation * c;
             }
         }
+        // If we've exceeded the ray bounce limit, no more light is gathered.
         return color(0, 0, 0);
     }
 

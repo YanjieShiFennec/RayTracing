@@ -21,7 +21,6 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 }
 
 // C++ Std Usings
-using std::make_shared;
 using std::sqrt;
 
 // Constants
