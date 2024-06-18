@@ -47,7 +47,7 @@ public:
     }
 
     __host__ __device__ vec3 &operator/=(float t) {
-        return *this *= 1 / t;
+        return *this *= 1.0 / t;
     }
 
     __host__ __device__ float length() const {
@@ -60,7 +60,7 @@ public:
 
     __device__ bool near_zero() const {
         // Return true if the vector is close to zero in all dimensions.
-        float s = 1e-8;
+        float s = 1e-8f;
         return (fabsf(e[0]) < s) && (fabsf(e[1]) < s) && (fabsf(e[2]) < s);
     }
 
@@ -161,7 +161,7 @@ __device__ inline vec3 random_on_hemisphere(const vec3 &normal, curandState &ran
 
 // 镜面反射，v 为入射光线，n 为平面法向量
 __device__ inline vec3 reflect(const vec3 &v, const vec3 &n) {
-    return v - 2 * dot(v, n) * n;
+    return v - 2.0f * dot(v, n) * n;
 }
 
 // 折射

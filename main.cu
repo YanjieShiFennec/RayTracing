@@ -35,32 +35,54 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
     }
 }
 
-__global__ void create_world(hittable_list **d_world) {
+__global__ void create_world(hittable_list **d_world, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        auto material_ground = new lambertian(color(0.8, 0.8, 0.0));
-        auto material_center = new lambertian(color(0.1, 0.2, 0.5));
-        auto material_left = new dielectric(1.5f);
-        auto material_bubble = new dielectric(1.0f / 1.5f);
-        auto material_right = new metal(color(0.8, 0.6, 0.2), 0.0);
+        curandState local_rand_state = rand_state[0];
 
         d_world[0] = new hittable_list();
-        d_world[0]->add(new sphere(point3(0, -100.5, -1), 100, material_ground));
-        d_world[0]->add(new sphere(point3(0, 0, -1.2), 0.5, material_center));
-        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.5, material_left));
-        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.4, material_bubble));
-        d_world[0]->add(new sphere(point3(1, 0, -1), 0.5, material_right));
 
-        /* vfov test */
-        // float R = cosf(pi / 4.0f);
-        // auto material_left = new lambertian(color(0, 0, 1));
-        // auto material_right = new lambertian(color(1, 0, 0));
-        // d_world[0] = new hittable_list();
-        // d_world[0]->add(new sphere(point3(-R, 0, -1), R, material_left));
-        // d_world[0]->add(new sphere(point3(R, 0, -1), R, material_right));
+        auto material_ground = new lambertian(color(0.5, 0.5, 0.5));
+        d_world[0]->add(new sphere(point3(0, -1000, 0), 1000, material_ground));
+
+        for (int a = -11; a < 11; a++) {
+            for (int b = -11; b < 11; b++) {
+                float choose_mat = random_float(local_rand_state);
+                point3 center(a + 0.9f * random_float(local_rand_state), 0.2, b + 0.9f * random_float(local_rand_state));
+
+                if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+                    material *sphere_material;
+
+                    if (choose_mat < 0.8) {
+                        // diffuse
+                        auto albedo = color::random(local_rand_state) * color::random(local_rand_state);
+                        sphere_material = new lambertian(albedo);
+                    } else if (choose_mat < 0.95) {
+                        // metal
+                        auto albedo = color::random(local_rand_state, 0.5, 1);
+                        auto fuzz = random_float(local_rand_state, 0, 0.5);
+                        sphere_material = new metal(albedo, fuzz);
+                    } else {
+                        // glass
+                        sphere_material = new dielectric(1.5);
+                    }
+                    d_world[0]->add(new sphere(center, 0.2, sphere_material));
+                }
+            }
+        }
+
+        auto material1 = new dielectric(1.5);
+        d_world[0]->add(new sphere(point3(0, 1, 0), 1.0, material1));
+
+        auto material2 = new lambertian(color(0.4, 0.2, 0.1));
+        d_world[0]->add(new sphere(point3(-4, 1, 0), 1.0, material2));
+
+        auto material3 = new metal(color(0.7, 0.6, 0.5), 0.0);
+        d_world[0]->add(new sphere(point3(4, 1, 0), 1.0, material3));
     }
 }
 
-__global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel, int max_depth,
+__global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel,
+                              int max_depth,
                               float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
                               float focus_dist) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -89,25 +111,21 @@ __global__ void curand_init(curandState *rand_state, int image_width, int image_
 int main() {
     // Image / Camera params
     float aspect_ratio = 16.0f / 9.0f;
-    int image_width = 400;
-    int samples_per_pixel = 100;
+    int image_width = 1920;
+    int samples_per_pixel = 500;
     int max_depth = 50;
 
-    float vfov = 30.0f;
-    point3 lookfrom = point3(-4, 1, 1);
+    float vfov = 20.0f;
+    point3 lookfrom = point3(13, 2, 3);
     point3 lookat = point3(0, 0, -1);
     vec3 vup = vec3(0, 1, 0);
 
-    float defocus_angle = 10.0f;
-    float focus_dist = 3.4f;
+    float defocus_angle = 0.6f;
+    float focus_dist = 10.0f;
 
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
-
-    // Random
-    curandState *d_rand_state;
-    checkCudaErrors(cudaMalloc(&d_rand_state, image_width*image_height*sizeof(curandState)));
 
     // Camera
     camera **d_cam;
@@ -117,10 +135,24 @@ int main() {
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
+    // CUDA Thread
+    int tx = 8; // 线程数量，对应 image_width
+    int ty = 8; // 线程数量，对应 image_height
+    dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
+    dim3 threads(tx, ty);
+
+    // Random
+    curandState *d_rand_state;
+    checkCudaErrors(cudaMalloc(&d_rand_state, image_width*image_height*sizeof(curandState)));
+    curand_init<<<blocks, threads>>>(d_rand_state, image_width, image_height);
+    checkCudaErrors(cudaGetLastError());
+    // 等待 GPU 执行完成
+    checkCudaErrors(cudaDeviceSynchronize());
+
     // World
     hittable_list **d_world;
     checkCudaErrors(cudaMallocManaged(&d_world, sizeof(hittable_list*)));
-    create_world<<<1, 1>>>(d_world);
+    create_world<<<1, 1>>>(d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -133,15 +165,6 @@ int main() {
     clock_t start, stop;
     start = clock();
 
-    // CUDA Thread
-    int tx = 8; // 线程数量，对应 image_width
-    int ty = 8; // 线程数量，对应 image_height
-    dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
-    dim3 threads(tx, ty);
-    curand_init<<<blocks, threads>>>(d_rand_state, image_width, image_height);
-    checkCudaErrors(cudaGetLastError());
-    // 等待 GPU 执行完成
-    checkCudaErrors(cudaDeviceSynchronize());
     render<<<blocks, threads>>>(data, d_cam, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
