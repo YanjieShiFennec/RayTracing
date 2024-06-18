@@ -25,11 +25,11 @@ const char filename[] = "../RayTracing.png";
 
 // #define infinity std::numeric_limits<float>::infinity()
 __device__ const float infinity = std::numeric_limits<float>::infinity();
-const float pi = 3.1415926535897932385;
+__device__ const float pi = 3.1415926535897932385f;
 
 // Utility Functions
-__host__ inline double degrees_to_radians(double degrees){
-    return degrees * pi / 180;
+__device__ inline float degrees_to_radians(float degrees){
+    return degrees * pi / 180.0f;
 }
 
 __device__ inline float random_double(curandState &rand_state) {

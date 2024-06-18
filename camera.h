@@ -7,15 +7,17 @@
 
 class camera {
 public:
-    float aspect_ratio = 1.0; // Ratio of image width over height
+    float aspect_ratio = 1.0f; // Ratio of image width over height
     int image_width = 100; // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
     int max_depth = 10; // Maximum number of ray bounces into scene
 
+    float vfov = 90.0f; // Vertical view angle (field of view) 垂直可视角度
+
     __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel,
-                      int max_depth): aspect_ratio(aspect_ratio),
+                      int max_depth, float vfov): aspect_ratio(aspect_ratio),
                                       image_width(image_width), samples_per_pixel(samples_per_pixel),
-                                      max_depth(max_depth) {
+                                      max_depth(max_depth), vfov(vfov) {
         initialize();
     }
 
@@ -110,8 +112,10 @@ private:
         camera_center = point3(0, 0, 0);
 
         // Determine viewport dimensions.
-        float focal_length = 1.0;
-        float viewport_height = 2.0; // 视窗高度，数值越大包含的画面范围越大
+        float focal_length = 1.0f;
+        float theta = degrees_to_radians(vfov);
+        float h = tanf(theta / 2.0f);
+        float viewport_height = 2.0f * h * focal_length; // 视窗高度，数值越大包含的画面范围越大
         float viewport_width = viewport_height * (float(image_width) / image_height);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges
