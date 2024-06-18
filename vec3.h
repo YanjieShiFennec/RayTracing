@@ -51,7 +51,7 @@ public:
     }
 
     __host__ __device__ float length() const {
-        return sqrt(length_squared());
+        return sqrtf(length_squared());
     }
 
     __host__ __device__ float length_squared() const {
@@ -106,7 +106,7 @@ __host__ __device__ inline vec3 operator*(const vec3 &v, float t) {
 }
 
 __host__ __device__ inline vec3 operator/(const vec3 &v, float t) {
-    return (1 / t) * v;
+    return (1.0f / t) * v;
 }
 
 // 向量内积/点乘

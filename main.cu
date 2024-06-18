@@ -37,32 +37,33 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
 
 __global__ void create_world(hittable_list **d_world) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        // auto material_ground = new lambertian(color(0.8, 0.8, 0.0));
-        // auto material_center = new lambertian(color(0.1, 0.2, 0.5));
-        // auto material_left = new dielectric(1.5f);
-        // auto material_bubble = new dielectric(1.0f / 1.5f);
-        // auto material_right = new metal(color(0.8, 0.6, 0.2), 0.0);
-        //
-        // d_world[0] = new hittable_list();
-        // d_world[0]->add(new sphere(point3(0, -100.5, -1), 100, material_ground));
-        // d_world[0]->add(new sphere(point3(0, 0, -1.2), 0.5, material_center));
-        // d_world[0]->add(new sphere(point3(-1, 0, -1), 0.5, material_left));
-        // d_world[0]->add(new sphere(point3(-1, 0, -1), 0.4, material_bubble));
-        // d_world[0]->add(new sphere(point3(1, 0, -1), 0.5, material_right));
+        auto material_ground = new lambertian(color(0.8, 0.8, 0.0));
+        auto material_center = new lambertian(color(0.1, 0.2, 0.5));
+        auto material_left = new dielectric(1.5f);
+        auto material_bubble = new dielectric(1.0f / 1.5f);
+        auto material_right = new metal(color(0.8, 0.6, 0.2), 0.0);
 
-        float R = cosf(pi / 4.0f);
-        auto material_left = new lambertian(color(0, 0, 1));
-        auto material_right = new lambertian(color(1, 0, 0));
         d_world[0] = new hittable_list();
-        d_world[0]->add(new sphere(point3(-R, 0, -1), R, material_left));
-        d_world[0]->add(new sphere(point3(R, 0, -1), R, material_right));
+        d_world[0]->add(new sphere(point3(0, -100.5, -1), 100, material_ground));
+        d_world[0]->add(new sphere(point3(0, 0, -1.2), 0.5, material_center));
+        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.5, material_left));
+        d_world[0]->add(new sphere(point3(-1, 0, -1), 0.4, material_bubble));
+        d_world[0]->add(new sphere(point3(1, 0, -1), 0.5, material_right));
+
+        /* vfov test */
+        // float R = cosf(pi / 4.0f);
+        // auto material_left = new lambertian(color(0, 0, 1));
+        // auto material_right = new lambertian(color(1, 0, 0));
+        // d_world[0] = new hittable_list();
+        // d_world[0]->add(new sphere(point3(-R, 0, -1), R, material_left));
+        // d_world[0]->add(new sphere(point3(R, 0, -1), R, material_right));
     }
 }
 
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel, int max_depth,
-                              float vfov) {
+                              float vfov, point3 lookfrom, point3 lookat, vec3 vup) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth, vfov);
+        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup);
         // printf("%d %f\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
     }
 }
@@ -84,12 +85,15 @@ __global__ void curand_init(curandState *rand_state, int image_width, int image_
 }
 
 int main() {
-    // Image / Camera
+    // Image / Camera params
     float aspect_ratio = 16.0f / 9.0f;
     int image_width = 400;
     int samples_per_pixel = 100;
     int max_depth = 50;
-    float vfov = 60.0f;
+    float vfov = 30.0f;
+    point3 lookfrom = point3(-4, 1, 1);
+    point3 lookat = point3(0, 0, -1);
+    vec3 vup = vec3(0, 1, 0);
 
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
@@ -102,7 +106,8 @@ int main() {
     // Camera
     camera **d_cam;
     checkCudaErrors(cudaMallocManaged(&d_cam, sizeof(camera*)));
-    create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov);
+    create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat,
+                            vup);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 

@@ -13,11 +13,14 @@ public:
     int max_depth = 10; // Maximum number of ray bounces into scene
 
     float vfov = 90.0f; // Vertical view angle (field of view) 垂直可视角度
+    point3 lookfrom = point3(0, 0, 0); // Point camera is looking from
+    point3 lookat = point3(0, 0, -1); // Point camera is looking at
+    vec3 vup = vec3(0, 1, 0); // Camera-relative "up" direction
 
     __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel,
-                      int max_depth, float vfov): aspect_ratio(aspect_ratio),
-                                      image_width(image_width), samples_per_pixel(samples_per_pixel),
-                                      max_depth(max_depth), vfov(vfov) {
+                      int max_depth, float vfov, point3 lookfrom, point3 lookat, vec3 vup): aspect_ratio(aspect_ratio),
+        image_width(image_width), samples_per_pixel(samples_per_pixel),
+        max_depth(max_depth), vfov(vfov), lookfrom(lookfrom), lookat(lookat), vup(vup) {
         initialize();
     }
 
@@ -102,6 +105,7 @@ private:
     point3 pixel00_loc; // Location of pixel (0, 0)
     vec3 pixel_delta_u; // Offset to pixel to the right
     vec3 pixel_delta_v; // Offset to pixel below
+    vec3 u, v, w; // Camera frame basis vectors
 
     __device__ void initialize() {
         image_height = int(image_width / aspect_ratio);
@@ -109,25 +113,30 @@ private:
 
         pixel_samples_scale = 1.0f / samples_per_pixel;
 
-        camera_center = point3(0, 0, 0);
+        camera_center = lookfrom;
 
         // Determine viewport dimensions.
-        float focal_length = 1.0f;
+        float focal_length = (lookfrom - lookat).length();
         float theta = degrees_to_radians(vfov);
         float h = tanf(theta / 2.0f);
         float viewport_height = 2.0f * h * focal_length; // 视窗高度，数值越大包含的画面范围越大
         float viewport_width = viewport_height * (float(image_width) / image_height);
 
+        // Calculate the u, v, w unit basis vectors for the camera coordinate frame.
+        w = unit_vector(lookfrom - lookat);
+        u = unit_vector(cross(vup, w));
+        v = cross(w, u);
+
         // Calculate the vectors across the horizontal and down the vertical viewport edges
-        auto viewport_u = vec3(viewport_width, 0, 0);
-        auto viewport_v = vec3(0, -viewport_height, 0);
+        auto viewport_u = viewport_width * u; // Vector across viewport horizontal edge
+        auto viewport_v = viewport_height * -v; // Vector down viewport vertical edge
 
         // Calculate the horizontal and vertical delta vectors from pixel to pixel.
         pixel_delta_u = viewport_u / image_width;
         pixel_delta_v = viewport_v / image_height;
 
         // Calculate the location of the upper left pixel.
-        auto viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u / 2 - viewport_v / 2;
+        auto viewport_upper_left = camera_center - (focal_length * w) - viewport_u / 2.0f - viewport_v / 2.0f;
         pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
     }
 };
