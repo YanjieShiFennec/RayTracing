@@ -29,6 +29,18 @@ public:
         objects[size++] = object;
     }
 
+    __device__ void remove(int index) {
+        if (index < 0 || index >= size)
+            return;
+
+        if (index != size - 1) {
+            for (int i = index; i < size - 1; i++) {
+                objects[i] = objects[i + 1];
+            }
+        }
+        size--;
+    }
+
     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
         hit_record temp_rec;
         bool hit_anything = false;
