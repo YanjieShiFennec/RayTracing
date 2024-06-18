@@ -61,9 +61,11 @@ __global__ void create_world(hittable_list **d_world) {
 }
 
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel, int max_depth,
-                              float vfov, point3 lookfrom, point3 lookat, vec3 vup) {
+                              float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
+                              float focus_dist) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup);
+        cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
+                            defocus_angle, focus_dist);
         // printf("%d %f\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
     }
 }
@@ -90,10 +92,14 @@ int main() {
     int image_width = 400;
     int samples_per_pixel = 100;
     int max_depth = 50;
+
     float vfov = 30.0f;
     point3 lookfrom = point3(-4, 1, 1);
     point3 lookat = point3(0, 0, -1);
     vec3 vup = vec3(0, 1, 0);
+
+    float defocus_angle = 10.0f;
+    float focus_dist = 3.4f;
 
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
@@ -107,7 +113,7 @@ int main() {
     camera **d_cam;
     checkCudaErrors(cudaMallocManaged(&d_cam, sizeof(camera*)));
     create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat,
-                            vup);
+                            vup, defocus_angle, focus_dist);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 

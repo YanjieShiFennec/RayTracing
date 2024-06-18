@@ -79,7 +79,7 @@ public:
 
         bool cannot_refract = ri * sin_theta > 1.0; // 折射还是全反射
         vec3 direction;
-        if (cannot_refract || reflectance(cos_theta, ri) > random_double(rand_state))
+        if (cannot_refract || reflectance(cos_theta, ri) > random_float(rand_state))
             direction = reflect(unit_direction, rec.normal);
         else
             direction = refract(unit_direction, rec.normal, ri);

@@ -65,15 +65,15 @@ public:
     }
 
     __device__ static vec3 random(curandState &rand_state) {
-        return vec3(random_double(rand_state),
-                    random_double(rand_state),
-                    random_double(rand_state));
+        return vec3(random_float(rand_state),
+                    random_float(rand_state),
+                    random_float(rand_state));
     }
 
     __device__ static vec3 random(curandState &rand_state, float min, float max) {
-        return vec3(random_double(rand_state, min, max),
-                    random_double(rand_state, min, max),
-                    random_double(rand_state, min, max));
+        return vec3(random_float(rand_state, min, max),
+                    random_float(rand_state, min, max),
+                    random_float(rand_state, min, max));
     }
 };
 
@@ -128,10 +128,18 @@ __host__ __device__ inline vec3 unit_vector(const vec3 &v) {
     return v / v.length();
 }
 
+__device__ inline vec3 random_in_unit_disk(curandState &rand_state) {
+    while (true) {
+        auto p = vec3(random_float(rand_state, -1.0f, 1.0f), random_float(rand_state, -1.0f, 1.0f), 0);
+        if (p.length_squared() < 1.0f)
+            return p;
+    }
+}
+
 __device__ inline vec3 random_in_unit_sphere(curandState &rand_state) {
     while (true) {
-        auto p = vec3::random(rand_state, -1, 1);
-        if (p.length_squared() < 1)
+        auto p = vec3::random(rand_state, -1.0f, 1.0f);
+        if (p.length_squared() < 1.0f)
             return p;
     }
 }
