@@ -19,20 +19,7 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
     int stride_x = blockDim.x * gridDim.x;
     int stride_y = blockDim.y * gridDim.y;
 
-    for (int j = index_y; j < cam[0]->get_image_height(); j += stride_y) {
-        for (int i = index_x; i < cam[0]->image_width; i += stride_x) {
-            int pixel_index = channels * (j * cam[0]->image_width + i);
-            color pixel_color(0, 0, 0);
-            curandState local_rand_state = rand_state[pixel_index / channels];
-            // printf("%d %d\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
-
-            for (int sample = 0; sample < cam[0]->samples_per_pixel; sample++) {
-                ray r = camera::get_ray(i, j, cam, local_rand_state);
-                pixel_color += camera::ray_color(r, cam[0]->max_depth, d_world, local_rand_state);
-            }
-            write_color(data, pixel_index, pixel_color * cam[0]->get_pixel_samples_scale());
-        }
-    }
+    cam[0]->render(data, d_world, rand_state, index_x, index_y, stride_x, stride_y);
 }
 
 __global__ void create_world(hittable_list **d_world, curandState *rand_state) {
@@ -47,7 +34,8 @@ __global__ void create_world(hittable_list **d_world, curandState *rand_state) {
         for (int a = -11; a < 11; a++) {
             for (int b = -11; b < 11; b++) {
                 float choose_mat = random_float(local_rand_state);
-                point3 center(a + 0.9f * random_float(local_rand_state), 0.2, b + 0.9f * random_float(local_rand_state));
+                point3 center(a + 0.9f * random_float(local_rand_state), 0.2,
+                              b + 0.9f * random_float(local_rand_state));
 
                 if ((center - point3(4, 0.2, 0)).length() > 0.9) {
                     material *sphere_material;
@@ -129,7 +117,7 @@ int main() {
 
     // Camera
     camera **d_cam;
-    checkCudaErrors(cudaMallocManaged(&d_cam, sizeof(camera*)));
+    checkCudaErrors(cudaMalloc(&d_cam, sizeof(camera*)));
     create_camera<<<1, 1>>>(d_cam, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat,
                             vup, defocus_angle, focus_dist);
     checkCudaErrors(cudaGetLastError());
@@ -151,7 +139,7 @@ int main() {
 
     // World
     hittable_list **d_world;
-    checkCudaErrors(cudaMallocManaged(&d_world, sizeof(hittable_list*)));
+    checkCudaErrors(cudaMalloc(&d_world, sizeof(hittable_list*)));
     create_world<<<1, 1>>>(d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());

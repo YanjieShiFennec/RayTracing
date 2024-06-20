@@ -31,39 +31,24 @@ public:
         initialize();
     }
 
-    __device__ int get_image_height() const {
-        return image_height;
+    __device__ void render(unsigned char *data, hittable_list **d_world, curandState *rand_state, int index_x,
+                           int index_y, int stride_x, int stride_y) {
+        for (int j = index_y; j < image_height; j += stride_y) {
+            for (int i = index_x; i < image_width; i += stride_x) {
+                int pixel_index = channels * (j * image_width + i);
+                color pixel_color(0, 0, 0);
+                curandState local_rand_state = rand_state[pixel_index / channels];
+
+                for (int sample = 0; sample < samples_per_pixel; sample++) {
+                    ray r = get_ray(i, j, local_rand_state);
+                    pixel_color += ray_color(r, max_depth, d_world, local_rand_state);
+                }
+                write_color(data, pixel_index, pixel_color * pixel_samples_scale);
+            }
+        }
     }
 
-    __device__ float get_pixel_samples_scale() const {
-        return pixel_samples_scale;
-    }
-
-    __device__ point3 get_camera_center() const {
-        return camera_center;
-    }
-
-    __device__ point3 get_pixel00_loc() const {
-        return pixel00_loc;
-    }
-
-    __device__ vec3 get_pixel_delta_u() const {
-        return pixel_delta_u;
-    }
-
-    __device__ vec3 get_pixel_delta_v() const {
-        return pixel_delta_v;
-    }
-
-    __device__ vec3 get_defocus_disk_u() const {
-        return defocus_disk_u;
-    }
-
-    __device__ vec3 get_defocus_disk_v() const {
-        return defocus_disk_v;
-    }
-
-    __device__ static color ray_color(const ray &r, int depth, hittable_list **d_world, curandState &rand_state) {
+    __device__ color ray_color(const ray &r, int depth, hittable_list **d_world, curandState &rand_state) {
         ray cur_ray = r;
         color cur_attenuation = color(1.0, 1.0, 1.0);
         // 击中球面的光线，模拟哑光材料漫反射
@@ -94,32 +79,29 @@ public:
         return color(0, 0, 0);
     }
 
-    __device__ static vec3 sample_square(curandState &local_rand_state) {
+    __device__ vec3 sample_square(curandState &local_rand_state) {
         // Returns the vector to a random point in the [-0.5, -0.5]-[+0.5, +0,5] unit square.
         return vec3(random_float(local_rand_state) - 0.5, random_float(local_rand_state) - 0.5, 0);
     }
 
-    __device__ static ray get_ray(int i, int j, camera **cam, curandState &local_rand_state) {
+    __device__ ray get_ray(int i, int j, curandState &local_rand_state) {
         // Construct a camera ray originating from the defocus disk and directed at randomly sampled
         // point around the pixel, location i, j.
 
         auto offset = sample_square(local_rand_state);
-        auto pixel_sample = cam[0]->get_pixel00_loc()
-                            + ((i + offset.x()) * cam[0]->get_pixel_delta_u())
-                            + ((j + offset.y()) * cam[0]->get_pixel_delta_v());
+        auto pixel_sample = pixel00_loc
+                            + ((i + offset.x()) * pixel_delta_u)
+                            + ((j + offset.y()) * pixel_delta_v);
 
-        auto ray_origin = (cam[0]->defocus_angle <= 0)
-                              ? cam[0]->get_camera_center()
-                              : defocus_disk_sample(cam, local_rand_state);
+        auto ray_origin = (defocus_angle <= 0) ? camera_center : defocus_disk_sample(local_rand_state);
         auto ray_direction = pixel_sample - ray_origin;
         return ray(ray_origin, ray_direction);
     }
 
-    __device__ static point3 defocus_disk_sample(camera **cam, curandState &rand_state) {
+    __device__ point3 defocus_disk_sample(curandState &rand_state) {
         // Returns a random point in the camera defocus disk.
         auto p = random_in_unit_disk(rand_state);
-        return cam[0]->get_camera_center() + (p[0] * cam[0]->get_defocus_disk_u()) + (
-                   p[1] * cam[0]->get_defocus_disk_v());
+        return camera_center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
     }
 
 private:
