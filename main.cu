@@ -44,16 +44,19 @@ __global__ void create_world(hittable_list **d_world, curandState *rand_state) {
                         // diffuse
                         auto albedo = color::random(local_rand_state) * color::random(local_rand_state);
                         sphere_material = new lambertian(albedo);
+                        auto center2 = center + vec3(0.0f, random_float(local_rand_state, 0.0f, 0.5f), 0.0f);
+                        d_world[0]->add(new sphere(center, center2, 0.2, sphere_material));
                     } else if (choose_mat < 0.95) {
                         // metal
                         auto albedo = color::random(local_rand_state, 0.5, 1);
                         auto fuzz = random_float(local_rand_state, 0, 0.5);
                         sphere_material = new metal(albedo, fuzz);
+                        d_world[0]->add(new sphere(center, 0.2, sphere_material));
                     } else {
                         // glass
                         sphere_material = new dielectric(1.5);
+                        d_world[0]->add(new sphere(center, 0.2, sphere_material));
                     }
-                    d_world[0]->add(new sphere(center, 0.2, sphere_material));
                 }
             }
         }

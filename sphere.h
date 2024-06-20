@@ -7,7 +7,14 @@
 
 class sphere : public hittable {
 public:
-    __device__ sphere(const point3 &center, float radius, material *mat) : center(center), radius(fmaxf(0.0f, radius)), mat(mat) {
+    // Stationary Sphere
+    __device__ sphere(const point3 &center, float radius, material* mat)
+            : center1(center), radius(fmax(0.0f, radius)), mat(mat), is_moving(false) {}
+
+    // Moving sphere
+    __device__ sphere(const point3 &center1, const point3 &center2, float radius, material* mat) :
+            center1(center1), radius(fmax(0.0f, radius)), mat(mat), is_moving(true) {
+        center_vec = center2 - center1;
     }
 
     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
@@ -22,6 +29,7 @@ public:
          * 其中 t 为未知数，展开得 (d·d)t^2 + (-2d·(C-Q))t + (C-Q)·(C-Q) - r^2 = 0
          * 二元一次方程 b^2 - 4ac >= 0 时有解，说明光线击中球体
          */
+        point3 center = is_moving ? sphere_center(r.time()) : center1;
         vec3 oc = center - r.origin();
         // float a = dot(r.direction(), r.direction());
         // float b = -2.0f * dot(r.direction(), oc);
@@ -58,9 +66,17 @@ public:
     }
 
 private:
-    point3 center;
+    point3 center1;
     float radius;
     material *mat;
+    bool is_moving;
+    vec3 center_vec;
+
+    __device__ point3 sphere_center(float time) const {
+        // Linearly interpolate from center1 to center2 according to time, where t = 0 yields
+        // center1, and t = 1 yields center2.
+        return center1 + time * center_vec;
+    }
 };
 
 #endif // SPHERE_H
