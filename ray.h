@@ -17,13 +17,13 @@ public:
 
     const vec3 &direction() const { return dir; }
 
-    point3 at(double t) const {
+    point3 at(float t) const {
         return orig + t * dir;
     }
 
 private:
     // P(t) = Q + td（Q 为 orig，d 为 dir）
-    // 根据输入 t 确定最终光线到达的点 P: point3 at(double t)
+    // 根据输入 t 确定最终光线到达的点 P: point3 at(float t)
     point3 orig; // 光源坐标
     vec3 dir; // 光线方向
 };

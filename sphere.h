@@ -11,7 +11,7 @@
 
 class sphere : public hittable {
 public:
-    sphere(const point3 &center, double radius, shared_ptr<material> mat)
+    sphere(const point3 &center, float radius, shared_ptr<material> mat)
     : center(center), radius(fmax(0, radius)),mat(mat) {}
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
@@ -32,17 +32,17 @@ public:
         // auto c = dot(oc, oc) - radius * radius;
         // auto discriminant = b * b - 4 * a * c;
         // 将 b = -2h 代入简化求根公式
-        auto a = r.direction().length_squared();
-        auto h = dot(r.direction(), oc);
-        auto c = oc.length_squared() - radius * radius;
+        float a = r.direction().length_squared();
+        float h = dot(r.direction(), oc);
+        float c = oc.length_squared() - radius * radius;
         auto discriminant = h * h - a * c;
         if (discriminant < 0) {
             return false;
         }
 
-        auto sqrtd = sqrt(discriminant);
+        float sqrtd = sqrt(discriminant);
         // Find the nearest root that lies in the acceptable range.
-        auto root = (h - sqrtd) / a;
+        float root = (h - sqrtd) / a;
         if (!ray_t.surrounds(root)) {
             root = (h + sqrtd) / a;
             if (!ray_t.surrounds(root)) {
@@ -62,7 +62,7 @@ public:
 
 private:
     point3 center;
-    double radius;
+    float radius;
     shared_ptr<material> mat;
 };
 

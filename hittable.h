@@ -15,7 +15,7 @@ public:
     point3 p; // 光线击中球面的坐标点
     vec3 normal; // 法向量，这里定义其方向总是与光线方向相反
     shared_ptr<material> mat; // 物体材质，前向声明必须使用指针
-    double t; // 与光源的距离
+    float t; // 与光源的距离
     bool front_face; // true 代表光源在球面外部
 
     void set_face_normal(const ray &r, const vec3 &outward_normal) {

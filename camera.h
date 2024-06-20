@@ -16,20 +16,20 @@
 
 class camera {
 public:
-    double aspect_ratio = 1.0;  // Ratio of image width over height
+    float aspect_ratio = 1.0f;  // Ratio of image width over height
     int image_width = 100;      // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
     int max_depth = 10;         // Maximum number of ray bounces into scene
 
     // 镜头设置参数
-    double vfov = 90;           // Vertical view angle (filed of view) 垂直可视角度
+    float vfov = 90.0f;           // Vertical view angle (field of view) 垂直可视角度
     point3 lookfrom = point3(0, 0, 0);    // Point camera is looking from
     point3 lookat = point3(0, 0, -1);     // Point camera is looking at
     vec3 vup = vec3(0, 1, 0);             // Camera-relative "up" direction
 
     // 景深效果参数
-    double defocus_angle = 0;   // Variant angle of rays through each pixel. 0 表示不启用景深效果
-    double focus_dist = 10;     // Distance from camera lookfrom point to plane of perfect focus
+    float defocus_angle = 0.0f;   // Variant angle of rays through each pixel. 0 表示不启用景深效果
+    float focus_dist = 10.0f;     // Distance from camera lookfrom point to plane of perfect focus
 
     void render(const hittable &world, const char *file_name) {
         initialize();
@@ -60,7 +60,7 @@ public:
 
 private:
     int image_height;   // Rendered image height
-    double pixel_samples_scale; // Color scale factor for a sum of pixel samples
+    float pixel_samples_scale; // Color scale factor for a sum of pixel samples
     point3 center;      // Camera center
     point3 pixel00_loc; // Location of pixel (0, 0)
     vec3 pixel_delta_u; // Offset to pixel to the right
@@ -73,15 +73,15 @@ private:
         image_height = int(image_width / aspect_ratio);
         image_height = (image_height < 1) ? 1 : image_height;
 
-        pixel_samples_scale = 1.0 / samples_per_pixel;
+        pixel_samples_scale = 1.0f / samples_per_pixel;
 
         center = lookfrom;
 
         // Determine viewport dimensions.
-        auto theta = degrees_to_radians(vfov);
-        auto h = tan(theta / 2);
-        auto viewport_height = 2 * h * focus_dist; // 视窗高度，数值越大包含的画面范围越大
-        auto viewport_width = viewport_height * (double(image_width) / image_height);
+        float theta = degrees_to_radians(vfov);
+        float h = tan(theta / 2.0f);
+        float viewport_height = 2.0f * h * focus_dist; // 视窗高度，数值越大包含的画面范围越大
+        float viewport_width = viewport_height * (float(image_width) / image_height);
 
         // Calculate the u, v, w unit basis vectors for the camera coordinate frame.
         w = unit_vector(lookfrom - lookat);
@@ -97,11 +97,11 @@ private:
         pixel_delta_v = viewport_v / image_height;
 
         // Calculate the location of the upper left pixel.
-        auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
-        pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        auto viewport_upper_left = center - (focus_dist * w) - viewport_u / 2.0f - viewport_v / 2.0f;
+        pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
         // Calculate the camera defocus disk basis vectors.
-        auto defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2));
+        float defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2.0f));
         defocus_disk_u = u * defocus_radius;
         defocus_disk_v = v * defocus_radius;
     }
@@ -121,7 +121,7 @@ private:
 
     vec3 sample_square() const {
         // Returns the vector to a random point in the [-0.5, -0.5]-[+0.5, +0,5] unit square.
-        return vec3(random_double() - 0.5, random_double() - 0.5, 0);
+        return vec3(random_float() - 0.5f, random_float() - 0.5f, 0);
     }
 
     point3 defocus_disk_sample() const {
@@ -138,7 +138,7 @@ private:
         hit_record rec;
         // 击中球面的光线
         // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
-        if (world.hit(r, interval(0.001, infinity), rec)) {
+        if (world.hit(r, interval(0.001f, infinity), rec)) {
             ray scattered;
             color attenuation;
             if (rec.mat->scatter(r, rec, attenuation, scattered))
@@ -150,9 +150,9 @@ private:
         // -1.0 < y < 1.0
         vec3 unit_direction = unit_vector(r.direction());
         // 0.0 < a < 1.0
-        auto a = 0.5 * (unit_direction.y() + 1.0);
+        float a = 0.5f * (unit_direction.y() + 1.0f);
         // 线性渐变
-        return (1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+        return (1.0f - a) * color(1.0f, 1.0f, 1.0f) + a * color(0.5f, 0.7f, 1.0f);
     }
 };
 
