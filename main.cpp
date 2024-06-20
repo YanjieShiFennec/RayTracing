@@ -27,14 +27,15 @@ int main() {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
-                    world.add(make_shared<sphere>(center, 0.2f, sphere_material));
+                    auto center2 = center + vec3(0.0f, random_float(0.0f, 0.5f), 0.0f);
+                    world.add(make_shared<sphere>(center, center2, 0.2f, sphere_material));
                 } else if (choose_mat < 0.95) {
                     // metal
                     auto albedo = color::random(0.5f, 1.0f);
                     float fuzz = random_float(0.0f, 0.5f);
-                    sphere_material = make_shared<metal>(albedo,fuzz);
+                    sphere_material = make_shared<metal>(albedo, fuzz);
                     world.add(make_shared<sphere>(center, 0.2f, sphere_material));
-                }else{
+                } else {
                     // glass
                     sphere_material = make_shared<dielectric>(1.5f);
                     world.add(make_shared<sphere>(center, 0.2f, sphere_material));
@@ -66,8 +67,8 @@ int main() {
     camera cam;
 
     cam.aspect_ratio = 16.0f / 9.0f;
-    cam.image_width = 1920;
-    cam.samples_per_pixel = 500;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 10;
     cam.max_depth = 50;
 
     cam.vfov = 20.0f;
