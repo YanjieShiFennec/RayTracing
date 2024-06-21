@@ -4,6 +4,7 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
+#include "aabb.h"
 
 class sphere : public hittable {
 public:
