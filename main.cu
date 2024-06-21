@@ -7,6 +7,7 @@
 #include "sphere.h"
 #include "camera.h"
 #include "material.h"
+#include "bvh.h"
 
 #include <curand_kernel.h>
 
