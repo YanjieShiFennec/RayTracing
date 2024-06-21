@@ -6,6 +6,7 @@
 #define HITTABLE_H
 
 #include "rt_constants.h"
+#include "aabb.h"
 
 // hittable.h 和 material.h 构成循环依赖，使用前向声明
 class material;
@@ -33,6 +34,9 @@ public:
 
     // = 0，纯虚函数，无实现
     virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const = 0;
+
+    virtual aabb bounding_box() const = 0;
+
 };
 
 #endif // HITTABLE_H
