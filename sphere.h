@@ -9,12 +9,20 @@
 class sphere : public hittable {
 public:
     // Stationary Sphere
-    __device__ sphere(const point3 &center, float radius, material* mat)
-            : center1(center), radius(fmax(0.0f, radius)), mat(mat), is_moving(false) {}
+    __device__ sphere(const point3 &center, float radius, material *mat)
+        : center1(center), radius(fmax(0.0f, radius)), mat(mat), is_moving(false) {
+        auto rvec = vec3(radius, radius, radius);
+        bbox = aabb(center1 - rvec, center1 + rvec);
+    }
 
     // Moving sphere
-    __device__ sphere(const point3 &center1, const point3 &center2, float radius, material* mat) :
-            center1(center1), radius(fmax(0.0f, radius)), mat(mat), is_moving(true) {
+    __device__ sphere(const point3 &center1, const point3 &center2, float radius, material *mat) : center1(center1),
+        radius(fmax(0.0f, radius)), mat(mat), is_moving(true) {
+        auto rvec = vec3(radius, radius, radius);
+        aabb box1(center1 - rvec, center1 + rvec);
+        aabb box2(center2 - rvec, center2 + rvec);
+        bbox = aabb(box1,box2);
+
         center_vec = center2 - center1;
     }
 
@@ -66,12 +74,15 @@ public:
         return true;
     }
 
+    __device__ aabb bounding_box() const override { return bbox; }
+
 private:
     point3 center1;
     float radius;
     material *mat;
     bool is_moving;
     vec3 center_vec;
+    aabb bbox;
 
     __device__ point3 sphere_center(float time) const {
         // Linearly interpolate from center1 to center2 according to time, where t = 0 yields

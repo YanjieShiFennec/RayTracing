@@ -4,6 +4,7 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
+#include "aabb.h"
 
 class hittable_list : public hittable {
 public:
@@ -27,6 +28,7 @@ public:
             allocated_size = size * 2;
         }
         objects[size++] = object;
+        bbox = aabb(bbox, object->bounding_box());
     }
 
     __device__ void remove(int index) {
@@ -56,6 +58,11 @@ public:
 
         return hit_anything;
     }
+
+    __device__ aabb bounding_box() const override { return bbox; }
+
+private:
+    aabb bbox;
 };
 
 #endif // HITTABLE_LIST_H
