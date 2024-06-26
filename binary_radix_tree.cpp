@@ -2,23 +2,23 @@
 
 class node {
 public:
-    int value;
+    // = default，使用默认实现
+    virtual ~node() = default;
 
-    node(int value) : value(value) {}
-
-    virtual void print() = 0;
+    virtual void print() const = 0;
 };
 
 class inner_node : public node {
 public:
-    node *left;
-    node *right;
+    node *left = nullptr;
+    node *right = nullptr;
+    int value = 0;
 
-    inner_node() : node(0) {}
+    inner_node() : value(0) {}
 
-    inner_node(node *left, node *right, int value) : node(value), left(left), right(right) {}
+    inner_node(node *left, node *right, int value) : value(value), left(left), right(right) {}
 
-    void print() override {
+    void print() const override {
         std::cout << "Inner" << value << std::endl;
         left->print();
         right->print();
@@ -27,11 +27,13 @@ public:
 
 class leaf_node : public node {
 public:
-    leaf_node() : node(0) {}
+    int value = 0;
 
-    leaf_node(int value) : node(value) {}
+    leaf_node() : value(0) {}
 
-    void print() override {
+    leaf_node(int value) : value(value) {}
+
+    void print() const override {
         std::cout << "Leaf" << value << std::endl;
     }
 };
@@ -56,7 +58,7 @@ int div_rounding_up(int x, int y) {
     return (x + y - 1) / y;
 }
 
-inner_node *generateHierarchy(int *data, int size) {
+node *generateHierarchy(int *data, int size) {
     leaf_node *leaf_nodes = new leaf_node[size];
     inner_node *inner_nodes = new inner_node[size - 1];
     // leaf 结点存放数值
@@ -115,15 +117,33 @@ inner_node *generateHierarchy(int *data, int size) {
 
 int main() {
     int size = 8;
+    // data must be sorted
     int *data = new int[size]{1, 2, 4, 5, 19, 24, 25, 30};
     // for (int i = 0; i < size; i++) {
     //     *(data + i) = i + 1;
     // }
 
-    inner_node *in = generateHierarchy(data, size);
+    node *in = generateHierarchy(data, size);
     in->print();
 
     delete[]data;
-    delete in;
     return 0;
 }
+
+/*
+Inner0
+Inner3
+Inner1
+Leaf1
+Leaf2
+Inner2
+Leaf4
+Leaf5
+Inner4
+Leaf19
+Inner5
+Inner6
+Leaf24
+Leaf25
+Leaf30
+ */
