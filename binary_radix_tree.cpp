@@ -1,8 +1,3 @@
-#include <vector>
-#include <cmath>
-#include <cstdint>
-#include <algorithm>
-#include <limits>
 #include <iostream>
 
 // Tree node types
@@ -17,6 +12,8 @@ public:
     PtrType type;
 
     node(int value, PtrType type) : value(value), type(type) {}
+
+    virtual void print() = 0;
 };
 
 class inner_node : public node {
@@ -27,6 +24,12 @@ public:
     inner_node() : node(0, PtrType::Inner) {}
 
     inner_node(node *left, node *right, int value) : node(value, PtrType::Inner), left(left), right(right) {}
+
+    void print() override {
+        std::cout << "Inner" << value << std::endl;
+        left->print();
+        right->print();
+    }
 };
 
 class leaf_node : public node {
@@ -34,6 +37,9 @@ public:
     leaf_node() : node(0, PtrType::Leaf) {}
 
     leaf_node(int value) : node(value, PtrType::Leaf) {}
+    void print() override {
+        std::cout << "Leaf" << value << std::endl;
+    }
 };
 
 // 1 代表开始，-1 代表结尾
@@ -113,24 +119,15 @@ inner_node *generateHierarchy(int *data, int size) {
     return &inner_nodes[0];
 };
 
-void print(inner_node *n) {
-    std::cout << (n->type == PtrType::Leaf ? "Leaf" : "Inner") << n->value << std::endl;
-    if (n->type == PtrType::Leaf) {
-        return;
-    }
-    print((inner_node *) n->left);
-    print((inner_node *) n->right);
-}
-
 int main() {
     int size = 8;
     int *data = new int[size]{1, 2, 4, 5, 19, 24, 25, 30};
     // for (int i = 0; i < size; i++) {
     //     *(data + i) = i + 1;
     // }
-    //
+
     inner_node *in = generateHierarchy(data, size);
-    print(in);
+    in->print();
 
     delete[]data;
     delete in;
