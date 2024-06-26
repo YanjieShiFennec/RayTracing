@@ -1,17 +1,10 @@
 #include <iostream>
 
-// Tree node types
-enum class PtrType {
-    Leaf,
-    Inner
-};
-
 class node {
 public:
     int value;
-    PtrType type;
 
-    node(int value, PtrType type) : value(value), type(type) {}
+    node(int value) : value(value) {}
 
     virtual void print() = 0;
 };
@@ -21,9 +14,9 @@ public:
     node *left;
     node *right;
 
-    inner_node() : node(0, PtrType::Inner) {}
+    inner_node() : node(0) {}
 
-    inner_node(node *left, node *right, int value) : node(value, PtrType::Inner), left(left), right(right) {}
+    inner_node(node *left, node *right, int value) : node(value), left(left), right(right) {}
 
     void print() override {
         std::cout << "Inner" << value << std::endl;
@@ -34,9 +27,10 @@ public:
 
 class leaf_node : public node {
 public:
-    leaf_node() : node(0, PtrType::Leaf) {}
+    leaf_node() : node(0) {}
 
-    leaf_node(int value) : node(value, PtrType::Leaf) {}
+    leaf_node(int value) : node(value) {}
+
     void print() override {
         std::cout << "Leaf" << value << std::endl;
     }
