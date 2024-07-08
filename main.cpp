@@ -7,7 +7,30 @@
 #include "sphere.h"
 #include "bvh.h"
 
-// cmake-build-debug/RayTracing > image.ppm
+// Expands a 10-bit integer into 30 bits
+// by inserting 2 zeros after each bit.
+inline unsigned int expand_bits(unsigned int v) {
+    v = (v * 0x00010001u) & 0xFF0000FFu;
+    v = (v * 0x00000101u) & 0x0F00F00Fu;
+    v = (v * 0x00000011u) & 0xC30C30C3u;
+    v = (v * 0x00000005u) & 0x49249249u;
+    return v;
+}
+
+// Calculates a 30-bit Morton code for the
+// given 3D point located within the unit cube [0,1].
+inline unsigned int morton_3d(point3 centroid) {
+    float x = centroid.x();
+    float y = centroid.y();
+    float z = centroid.z();
+    x = fmin(fmax(x * 1024.0f, 0.0f), 1023.0f);
+    y = fmin(fmax(y * 1024.0f, 0.0f), 1023.0f);
+    z = fmin(fmax(z * 1024.0f, 0.0f), 1023.0f);
+    unsigned int xx = expand_bits((unsigned int) x);
+    unsigned int yy = expand_bits((unsigned int) y);
+    unsigned int zz = expand_bits((unsigned int) z);
+    return xx * 4 + yy * 2 + zz;
+}
 
 int main() {
     // 设置球体
@@ -54,6 +77,18 @@ int main() {
     auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
+    size_t size = world.objects.size();
+    unsigned int *morton_codes = new unsigned int[size];
+    int i = 0;
+    for (const auto &object: world.objects) {
+        auto centroid = object->bounding_box().get_centroid();
+        *(morton_codes + i) = morton_3d(centroid);
+        cout << *(morton_codes + i) << std::endl;
+        i++;
+    }
+
+    delete[]morton_codes;
+
     world = hittable_list(make_shared<bvh_node>(world));
 
     // auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
@@ -86,7 +121,7 @@ int main() {
     start = clock();
 
     char file_name[] = "../RayTracing.png";
-    cam.render(world, file_name);
+    // cam.render(world, file_name);
 
     end = clock();
     cout << "Time: " << double(end - start) / CLOCKS_PER_SEC << " s" << std::endl;

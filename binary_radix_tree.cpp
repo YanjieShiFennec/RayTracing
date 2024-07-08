@@ -1,3 +1,5 @@
+// https://research.nvidia.com/sites/default/files/publications/karras2012hpg_paper.pdf
+
 #include <iostream>
 
 class node {
@@ -8,6 +10,7 @@ public:
     virtual void print() const = 0;
 };
 
+// bvh_node
 class inner_node : public node {
 public:
     node *left = nullptr;
@@ -25,6 +28,7 @@ public:
     }
 };
 
+// sphere
 class leaf_node : public node {
 public:
     int value = 0;
@@ -77,7 +81,6 @@ node *generateHierarchy(int *data, int size) {
 
         // Find the other end using binary search
         int l = 0;
-        // 二分查找
         for (int t = l_max / 2; t >= 1; t /= 2) {
             if (delta(data, size, i, i + (l + t) * d) > delta_min)
                 l += t;
@@ -89,7 +92,6 @@ node *generateHierarchy(int *data, int size) {
         // Find the split position using binary search
         int delta_node = delta(data, size, i, j);
         int s = 0, q = 1, t;
-        // 二分查找
         while (q <= l) {
             t = div_rounding_up(l, q * 2);
             if (delta(data, size, i, i + (s + t) * d) > delta_node) {

@@ -57,5 +57,10 @@ public:
         }
         return true;
     }
+
+    point3 get_centroid() const{
+        point3 centroid(x.size(),y.size(),z.size());
+        return centroid / 2.0f;
+    }
 };
 #endif // AABB_H
