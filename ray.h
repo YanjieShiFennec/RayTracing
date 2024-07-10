@@ -1,7 +1,3 @@
-//
-// Created by 卢本伟 on 2024/5/30.
-//
-
 #ifndef RAY_H
 #define RAY_H
 

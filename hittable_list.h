@@ -43,6 +43,11 @@ public:
     }
 
     aabb bounding_box() const override { return bbox; }
+    void print() const override{
+        for (const auto &object: objects){
+            object->print(); // sphere
+        }
+    };
 
 private:
     aabb bbox;

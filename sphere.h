@@ -78,6 +78,10 @@ public:
 
     aabb bounding_box() const override { return bbox; }
 
+    void print() const override {
+        std::cout << bbox.x.min << " " << bbox.y.min << " " << bbox.z.min << std::endl;
+    };
+
 private:
     point3 center1;
     float radius;

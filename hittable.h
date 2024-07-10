@@ -37,6 +37,8 @@ public:
 
     virtual aabb bounding_box() const = 0;
 
+    virtual void print() const = 0;
+
 };
 
 #endif // HITTABLE_H
