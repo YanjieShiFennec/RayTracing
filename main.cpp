@@ -10,6 +10,10 @@
 // cmake-build-debug/RayTracing > image.ppm
 
 int main() {
+    // 计时
+    clock_t start, end;
+
+    start = clock();
     // 设置球体
     hittable_list world;
 
@@ -54,7 +58,10 @@ int main() {
     auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
-    world = hittable_list(make_shared<bvh_node>(world));
+    // create bvh
+    // world.print();
+    auto bn = make_shared<bvh_node>(world);
+    world = hittable_list(bn);
 
     // auto material_center = make_shared<lambertian>(color(0.1, 0.2, 0.5));
     // auto material_left = make_shared<dielectric>(1.5);
@@ -82,14 +89,13 @@ int main() {
     cam.focus_dist = 10.0f;
 
     // 渲染计时
-    clock_t start, end;
     start = clock();
 
     char file_name[] = "../RayTracing.png";
     cam.render(world, file_name);
 
     end = clock();
-    cout << "Time: " << double(end - start) / CLOCKS_PER_SEC << " s" << std::endl;
+    cout << "Render took " << double(end - start) / CLOCKS_PER_SEC << " seconds" << std::endl;
 
     return 0;
 }
