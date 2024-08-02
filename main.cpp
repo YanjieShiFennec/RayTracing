@@ -73,6 +73,9 @@ int main() {
     // world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, material_bubble));
     // world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
 
+    end = clock();
+    cout << "Create took " << double(end - start) / CLOCKS_PER_SEC << " seconds" << std::endl;
+
     camera cam;
 
     cam.aspect_ratio = 16.0f / 9.0f;
