@@ -1,7 +1,3 @@
-//
-// Created by 卢本伟 on 2024/6/3.
-//
-
 #ifndef RT_CONSTANTS_H
 #define RT_CONSTANTS_H
 

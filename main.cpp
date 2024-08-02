@@ -6,10 +6,11 @@
 #include "material.h"
 #include "sphere.h"
 #include "bvh.h"
+#include "texture.h"
 
 // cmake-build-debug/RayTracing > image.ppm
 
-int main() {
+void bouncing_spheres() {
     // 计时
     clock_t start, end;
 
@@ -17,8 +18,11 @@ int main() {
     // 设置球体
     hittable_list world;
 
-    auto material_ground = make_shared<lambertian>(color(0.5f, 0.5f, 0.5f));
-    world.add(make_shared<sphere>(point3(0.0f, -1000.0f, 0.0f), 1000.0f, material_ground));
+    auto checker = make_shared<checker_texture>(0.32f, color(0.2f, 0.3f, 0.1f), color(0.9f, 0.9f, 0.9f));
+    world.add(make_shared<sphere>(point3(0.0f, -1000.0f, 0.0f), 1000.0f, make_shared<lambertian>(checker)));
+
+    // auto material_ground = make_shared<lambertian>(color(0.5f, 0.5f, 0.5f));
+    // world.add(make_shared<sphere>(point3(0.0f, -1000.0f, 0.0f), 1000.0f, material_ground));
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
@@ -99,6 +103,38 @@ int main() {
 
     end = clock();
     cout << "Render took " << double(end - start) / CLOCKS_PER_SEC << " seconds" << std::endl;
+}
 
-    return 0;
+void checkered_spheres(){
+    hittable_list world;
+
+    auto checker = make_shared<checker_texture>(0.32f, color(0.2f, 0.3f, 0.1f), color(0.9f, 0.9f, 0.9f));
+    world.add(make_shared<sphere>(point3(0.0f, -10.0f, 0.0f), 10.0f, make_shared<lambertian>(checker)));
+    world.add(make_shared<sphere>(point3(0.0f, 10.0f, 0.0f), 10.0f, make_shared<lambertian>(checker)));
+
+    camera cam;
+
+    cam.aspect_ratio = 16.0f / 9.0f;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 20.0f;
+    cam.lookfrom = point3(13, 2, 3);
+    cam.lookat = point3(0, 0, 0);
+    cam.vup = vec3(0, 1, 0);
+
+    char file_name[] = "../RayTracing.png";
+    cam.render(world, file_name);
+}
+
+int main() {
+    switch (2) {
+        case 1:
+            bouncing_spheres();
+            break;
+        case 2:
+            checkered_spheres();
+            break;
+    }
 }

@@ -1,7 +1,3 @@
-
-// Created by 卢本伟 on 2024/6/4.
-//
-
 #ifndef INTERVAL_H
 #define INTERVAL_H
 

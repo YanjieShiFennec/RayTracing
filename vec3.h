@@ -1,7 +1,3 @@
-//
-// Created by 卢本伟 on 2024/5/29.
-//
-
 #ifndef VEC3_H
 #define VEC3_H
 

@@ -1,7 +1,3 @@
-//
-// Created by LeoWang on 2024/6/4.
-//
-
 #ifndef CAMERA_H
 #define CAMERA_H
 
