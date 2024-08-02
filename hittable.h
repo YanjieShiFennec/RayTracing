@@ -3,8 +3,6 @@
 
 #include "rt_constants.h"
 
-#include "aabb.h"
-
 // hittable.h 和 material.h 构成循环依赖，使用前向声明
 class material;
 

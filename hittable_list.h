@@ -4,7 +4,6 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
-#include "aabb.h"
 
 class hittable_list : public hittable {
 public:

@@ -3,7 +3,6 @@
 
 #include "rt_constants.h"
 
-#include "aabb.h"
 #include "hittable.h"
 #include "hittable_list.h"
 
@@ -32,16 +31,21 @@ __device__ void bubble_sort(hittable **h, size_t start, size_t end, int index) {
 
 class bvh_node : public hittable {
 public:
-    __device__ bvh_node(hittable_list **list, curandState &rand_state): bvh_node(
-        list[0]->objects, 0, list[0]->size, rand_state) {
+    __device__ bvh_node(hittable_list **list): bvh_node(
+        list[0]->objects, 0, list[0]->size) {
         // There's a C++ subtlety here. This constructor (without span indices) creates an
         // implicit copy of the hittable list, which we will modify. The lifetime of the copied
         // list only extends until this constructor exits. That's OK, because we only need to
         // persist the resulting bounding volume hierarchy.
     }
 
-    __device__ bvh_node(hittable **objects, size_t start, size_t end, curandState &rand_state) {
-        int axis = random_int(rand_state, 0, 2);
+    __device__ bvh_node(hittable **objects, size_t start, size_t end) {
+        // Build the bounding box of the span of source objects.
+        bbox = aabb_empty;
+        for (size_t object_index=start; object_index < end; object_index++)
+            bbox = aabb(bbox, objects[object_index]->bounding_box());
+
+        int axis = bbox.longest_axis();
         // printf("%d\n",axis);
         size_t object_span = end - start;
 
@@ -54,11 +58,9 @@ public:
             bubble_sort(objects, start, end, axis);
 
             auto mid = start + object_span / 2;
-            left = new bvh_node(objects, start, mid, rand_state);
-            right = new bvh_node(objects, mid, end, rand_state);
+            left = new bvh_node(objects, start, mid);
+            right = new bvh_node(objects, mid, end);
         }
-
-        bbox = aabb(left->bounding_box(), right->bounding_box());
     }
 
     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
@@ -139,6 +141,8 @@ private:
     hittable *left;
     hittable *right;
     aabb bbox;
+    const interval interval_empty = interval(+infinity, -infinity);
+    const aabb aabb_empty =  aabb(interval_empty, interval_empty, interval_empty);
 };
 
 #endif //BVH_H

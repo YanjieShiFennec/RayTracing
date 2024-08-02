@@ -64,5 +64,14 @@ public:
         }
         return true;
     }
+
+    __device__ int longest_axis() const {
+        // Returns the index of the longest axis of the bounding box.
+
+        if (x.size() > y.size())
+            return x.size() > z.size() ? 0 : 2;
+        else
+            return y.size() > z.size() ? 1 : 2;
+    }
 };
 #endif //AABB_H

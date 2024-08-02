@@ -52,5 +52,6 @@ __device__ inline int random_int(curandState &rand_state, int min, int max) {
 #include "ray.h"
 #include "vec3.h"
 #include "interval.h"
+#include "aabb.h"
 
 #endif // RT_CONSTANTS_H
