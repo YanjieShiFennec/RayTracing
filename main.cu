@@ -23,7 +23,7 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
     cam[0]->render(data, d_world, rand_state, index_x, index_y, stride_x, stride_y);
 }
 
-__global__ void create_world(hittable_list **d_world, curandState *rand_state) {
+__global__ void create_world(hittable_list **d_world, hittable **d_node, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = rand_state[0];
 
@@ -31,9 +31,9 @@ __global__ void create_world(hittable_list **d_world, curandState *rand_state) {
 
         auto material_ground = new lambertian(color(0.5, 0.5, 0.5));
         d_world[0]->add(new sphere(point3(0, -1000, 0), 1000, material_ground));
-
-        for (int a = -11; a < 11; a++) {
-            for (int b = -11; b < 11; b++) {
+        int n = 11;
+        for (int a = -1 * n; a < n; a++) {
+            for (int b = -1 * n; b < n; b++) {
                 float choose_mat = random_float(local_rand_state);
                 point3 center(a + 0.9f * random_float(local_rand_state), 0.2,
                               b + 0.9f * random_float(local_rand_state));
@@ -70,6 +70,11 @@ __global__ void create_world(hittable_list **d_world, curandState *rand_state) {
 
         auto material3 = new metal(color(0.7, 0.6, 0.5), 0.0);
         d_world[0]->add(new sphere(point3(4, 1, 0), 1.0, material3));
+
+        // bvh
+        // TODO:比不添加bvh速度慢。。。
+        // d_node[0] = new bvh_node(d_world, local_rand_state);
+        // d_world[0] = new hittable_list(d_node, 1);
     }
 }
 
@@ -142,11 +147,18 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
 
     // World
+    hittable **d_node;
+    checkCudaErrors(cudaMalloc(&d_node, sizeof(hittable*)));
     hittable_list **d_world;
     checkCudaErrors(cudaMalloc(&d_world, sizeof(hittable_list*)));
-    create_world<<<1, 1>>>(d_world, d_rand_state);
+    clock_t start, stop;
+    start = clock();
+    create_world<<<1, 1>>>(d_world, d_node, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+    stop = clock();
+    double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
+    std::cerr << "Create took " << timer_seconds << " seconds.\n";
 
     // Render
     unsigned char *data;
@@ -154,7 +166,6 @@ int main() {
     // 申请统一内存，允许 GPU 和 CPU 访问
     checkCudaErrors(cudaMallocManaged(&data, data_size));
 
-    clock_t start, stop;
     start = clock();
 
     render<<<blocks, threads>>>(data, d_cam, d_world, d_rand_state);
@@ -162,8 +173,8 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
 
     stop = clock();
-    double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
-    std::cerr << "Took " << timer_seconds << " seconds.\n";
+    timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
+    std::cerr << "Render took " << timer_seconds << " seconds.\n";
 
     // 保存为 png
     stbi_write_png(filename, image_width, image_height, channels, data, 0);
@@ -171,6 +182,7 @@ int main() {
     // 释放内存
     checkCudaErrors(cudaFree(d_cam));
     checkCudaErrors(cudaFree(d_rand_state));
+    checkCudaErrors(cudaFree(d_node));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(data));
     return 0;

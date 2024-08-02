@@ -21,7 +21,7 @@ public:
         auto rvec = vec3(radius, radius, radius);
         aabb box1(center1 - rvec, center1 + rvec);
         aabb box2(center2 - rvec, center2 + rvec);
-        bbox = aabb(box1,box2);
+        bbox = aabb(box1, box2);
 
         center_vec = center2 - center1;
     }
@@ -75,6 +75,18 @@ public:
     }
 
     __device__ aabb bounding_box() const override { return bbox; }
+
+    __device__ void print() const override {
+        printf("%f %f %f\n", bbox.x.min, bbox.y.min, bbox.z.min);
+    }
+
+    __device__ hittable *get_left_child() const override {
+        return nullptr;
+    };
+
+    __device__ hittable *get_right_child() const override {
+        return nullptr;
+    };
 
 private:
     point3 center1;

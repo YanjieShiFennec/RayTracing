@@ -61,6 +61,21 @@ public:
 
     __device__ aabb bounding_box() const override { return bbox; }
 
+    __device__ void print() const override {
+        for (int i = 0; i < size; i++) {
+            printf("%f %f %f\n", objects[i]->bounding_box().x.min, objects[i]->bounding_box().y.min,
+                   objects[i]->bounding_box().z.min);
+        }
+    }
+
+    __device__ hittable *get_left_child() const override {
+        return nullptr;
+    };
+
+    __device__ hittable *get_right_child() const override {
+        return nullptr;
+    };
+
 private:
     aabb bbox;
 };
