@@ -49,6 +49,14 @@ public:
         }
     };
 
+    shared_ptr<hittable> get_left_child() const override {
+        return nullptr;
+    };
+
+    shared_ptr<hittable> get_right_child() const override {
+        return nullptr;
+    };
+
 private:
     aabb bbox;
 };
