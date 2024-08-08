@@ -8,6 +8,7 @@
 #include "camera.h"
 #include "material.h"
 #include "bvh.h"
+#include "texture.h"
 
 #include <curand_kernel.h>
 
@@ -29,8 +30,12 @@ __global__ void create_world(hittable_list **d_world, hittable **d_node, curandS
 
         d_world[0] = new hittable_list();
 
-        auto material_ground = new lambertian(color(0.5, 0.5, 0.5));
-        d_world[0]->add(new sphere(point3(0, -1000, 0), 1000, material_ground));
+        auto checker = new checker_texture(0.32f, color(0.2f, 0.3f, 0.1f), color(0.9f, 0.9f, 0.9f));
+        d_world[0]->add(new sphere (point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(checker)));
+
+        // auto material_ground = new lambertian(color(0.5, 0.5, 0.5));
+        // d_world[0]->add(new sphere(point3(0, -1000, 0), 1000, material_ground));
+
         int n = 11;
         for (int a = -1 * n; a < n; a++) {
             for (int b = -1 * n; b < n; b++) {
@@ -73,8 +78,8 @@ __global__ void create_world(hittable_list **d_world, hittable **d_node, curandS
 
         // bvh
         // TODO:比不添加bvh速度慢。。。
-        d_node[0] = new bvh_node(d_world);
-        d_world[0] = new hittable_list(d_node, 1);
+        // d_node[0] = new bvh_node(d_world);
+        // d_world[0] = new hittable_list(d_node, 1);
     }
 }
 
@@ -108,8 +113,10 @@ __global__ void curand_init(curandState *rand_state, int image_width, int image_
 int main() {
     // Image / Camera params
     float aspect_ratio = 16.0f / 9.0f;
-    int image_width = 400;
-    int samples_per_pixel = 50;
+    int image_width = 1920;
+    int samples_per_pixel = 500;
+    // int image_width = 400;
+    // int samples_per_pixel = 50;
     int max_depth = 50;
 
     float vfov = 20.0f;

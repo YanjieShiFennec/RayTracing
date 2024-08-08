@@ -16,8 +16,12 @@ public:
 // 漫反射材质
 class lambertian : public material {
 public:
-    __device__ lambertian(const color &albedo) : albedo(albedo) {
+    __device__ lambertian(const color &albedo) : tex(new solid_color(albedo)) {
     }
+
+    __device__ lambertian(texture *tex) : tex(tex) {
+    }
+
 
     __device__ bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered,
                             curandState &rand_state)
@@ -32,12 +36,12 @@ public:
             scatter_direction = rec.normal;
 
         scattered = ray(rec.p, scatter_direction, r_in.time());
-        attenuation = albedo;
+        attenuation = tex->value(rec.u, rec.v, rec.p);
         return true;
     }
 
 private:
-    color albedo;
+    texture *tex;
 };
 
 // 金属材质
