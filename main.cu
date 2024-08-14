@@ -24,14 +24,14 @@ __global__ void render(unsigned char *data, camera **cam, hittable_list **d_worl
     cam[0]->render(data, d_world, rand_state, index_x, index_y, stride_x, stride_y);
 }
 
-__global__ void create_world(hittable_list **d_world, hittable **d_node, curandState *rand_state) {
+__global__ void create_world_bouncing_spheres(hittable_list **d_world, hittable **d_node, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = rand_state[0];
 
         d_world[0] = new hittable_list();
 
         auto checker = new checker_texture(0.32f, color(0.2f, 0.3f, 0.1f), color(0.9f, 0.9f, 0.9f));
-        d_world[0]->add(new sphere (point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(checker)));
+        d_world[0]->add(new sphere(point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(checker)));
 
         // auto material_ground = new lambertian(color(0.5, 0.5, 0.5));
         // d_world[0]->add(new sphere(point3(0, -1000, 0), 1000, material_ground));
@@ -83,6 +83,17 @@ __global__ void create_world(hittable_list **d_world, hittable **d_node, curandS
     }
 }
 
+__global__ void create_world_checkered_spheres(hittable_list **d_world) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        d_world[0] = new hittable_list();
+
+        auto checker = new checker_texture(0.32f, color(0.2f, 0.3f, 0.1f), color(0.9f, 0.9f, 0.9f));
+
+        d_world[0]->add(new sphere(point3(0.0f, -10.0f, 0.0f), 10.0f, new lambertian(checker)));
+        d_world[0]->add(new sphere(point3(0.0f, 10.0f, 0.0f), 10.0f, new lambertian(checker)));
+    }
+}
+
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel,
                               int max_depth,
                               float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
@@ -110,23 +121,8 @@ __global__ void curand_init(curandState *rand_state, int image_width, int image_
     }
 }
 
-int main() {
-    // Image / Camera params
-    float aspect_ratio = 16.0f / 9.0f;
-    int image_width = 1920;
-    int samples_per_pixel = 500;
-    // int image_width = 400;
-    // int samples_per_pixel = 50;
-    int max_depth = 50;
-
-    float vfov = 20.0f;
-    point3 lookfrom = point3(13, 2, 3);
-    point3 lookat = point3(0, 0, -1);
-    vec3 vup = vec3(0, 1, 0);
-
-    float defocus_angle = 0.6f;
-    float focus_dist = 10.0f;
-
+void process(int choice, float aspect_ratio, int image_width, int samples_per_pixel, int max_depth, float vfov,
+             point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle, float focus_dist) {
     // Calculate the image height, and ensure that it's at least 1.
     int image_height = int(image_width / aspect_ratio);
     image_height = (image_height < 1) ? 1 : image_height;
@@ -160,7 +156,14 @@ int main() {
     checkCudaErrors(cudaMalloc(&d_world, sizeof(hittable_list*)));
     clock_t start, stop;
     start = clock();
-    create_world<<<1, 1>>>(d_world, d_node, d_rand_state);
+    switch (choice) {
+        case 1:
+            create_world_bouncing_spheres<<<1, 1>>>(d_world, d_node, d_rand_state);
+            break;
+        case 2:
+            create_world_checkered_spheres<<<1, 1>>>(d_world);
+            break;
+    }
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
@@ -192,5 +195,53 @@ int main() {
     checkCudaErrors(cudaFree(d_node));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(data));
+}
+
+int main() {
+    float aspect_ratio, vfov, defocus_angle, focus_dist;
+    int image_width, samples_per_pixel, max_depth;
+    point3 lookfrom, lookat;
+    vec3 vup;
+
+    switch (2) {
+        case 1:
+            // Image / Camera params
+            aspect_ratio = 16.0f / 9.0f;
+        // image_width = 1920;
+        // samples_per_pixel = 500;
+            image_width = 400;
+            samples_per_pixel = 50;
+            max_depth = 50;
+
+            vfov = 20.0f;
+            lookfrom = point3(13, 2, 3);
+            lookat = point3(0, 0, -1);
+            vup = vec3(0, 1, 0);
+
+            defocus_angle = 0.6f;
+            focus_dist = 10.0f;
+            process(1, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
+                    defocus_angle, focus_dist);
+            break;
+        case 2:
+            // Image / Camera params
+            aspect_ratio = 16.0f / 9.0f;
+        image_width = 1920;
+        samples_per_pixel = 500;
+            // image_width = 400;
+            // samples_per_pixel = 100;
+            max_depth = 50;
+
+            vfov = 20.0f;
+            lookfrom = point3(13, 2, 3);
+            lookat = point3(0, 0, 0);
+            vup = vec3(0, 1, 0);
+
+            defocus_angle = 0.06f;
+            focus_dist = 10.0f;
+            process(2, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
+                    defocus_angle, focus_dist);
+            break;
+    }
     return 0;
 }
