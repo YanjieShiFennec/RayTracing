@@ -4,6 +4,8 @@
 #include "rt_constants.h"
 #include "rtw_stb_image.h"
 
+#include "perlin.h"
+
 class texture {
 public:
     virtual ~texture() = default;
@@ -71,6 +73,18 @@ public:
 
 private:
     rtw_image image;
+};
+
+class noise_texture : public texture {
+public:
+    noise_texture() {}
+
+    color value(float u, float v, const point3 &p) const override {
+        return color(1, 1, 1) * noise.noise(p);
+    }
+
+private:
+    perlin noise;
 };
 
 #endif // TEXTURE_H
