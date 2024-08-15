@@ -2,6 +2,7 @@
 #define TEXTURE_H
 
 #include "rt_constants.h"
+#include "perlin.h"
 
 class texture {
 public:
@@ -79,6 +80,19 @@ public:
 private:
     unsigned char *data;
     int width, height;
+};
+
+class noise_texture : public texture {
+public:
+    __device__ noise_texture(curandState &rand_state): noise(perlin(rand_state)) {
+    }
+
+    __device__ color value(float u, float v, const point3 &p) const override {
+        return color(1, 1, 1) * noise.noise(p);
+    }
+
+private:
+    perlin noise;
 };
 
 #endif // TEXTURE_H

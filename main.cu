@@ -108,6 +108,16 @@ __global__ void create_world_earth(hittable_list **d_world, unsigned char *image
     }
 }
 
+__global__ void create_world_perlin_spheres(hittable_list **d_world, curandState *rand_state) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        d_world[0] = new hittable_list();
+
+        auto pertext = new noise_texture(rand_state[0]);
+        d_world[0]->add(new sphere(point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(pertext)));
+        d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(pertext)));
+    }
+}
+
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel,
                               int max_depth,
                               float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
@@ -179,7 +189,7 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
         case 2:
             create_world_checkered_spheres<<<1, 1>>>(d_world);
             break;
-        case 3:
+        case 3: {
             int texture_x, texture_y, texture_n;
             unsigned char *image_texture_data_host = stbi_load("../images/earthmap.jpg", &texture_x, &texture_y,
                                                                &texture_n, 0);
@@ -195,6 +205,10 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
                 cudaMemcpy(image_texture_data, image_texture_data_host, texture_size, cudaMemcpyHostToDevice));
 
             create_world_earth<<<1,1>>>(d_world, image_texture_data, texture_x, texture_y);
+        }
+        break;
+        case 4:
+            create_world_perlin_spheres<<<1, 1>>>(d_world, d_rand_state);
             break;
     }
 
@@ -234,12 +248,12 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
 }
 
 int main() {
-    float aspect_ratio, vfov, defocus_angle, focus_dist;
-    int image_width, samples_per_pixel, max_depth;
+    float aspect_ratio = 16.0f / 9.0f, vfov = 20.0f, defocus_angle = 0.0f, focus_dist = 10.0f;
+    int image_width = 1920, samples_per_pixel = 500, max_depth = 50;
     point3 lookfrom, lookat;
     vec3 vup;
 
-    int choice = 3;
+    int choice = 4;
     switch (choice) {
         case 1:
             // Image / Camera params
@@ -256,15 +270,12 @@ int main() {
             vup = vec3(0, 1, 0);
 
             defocus_angle = 0.6f;
-            focus_dist = 10.0f;
             break;
         case 2:
             // Image / Camera params
             aspect_ratio = 16.0f / 9.0f;
             image_width = 1920;
             samples_per_pixel = 500;
-        // image_width = 400;
-        // samples_per_pixel = 100;
             max_depth = 50;
 
             vfov = 20.0f;
@@ -273,15 +284,12 @@ int main() {
             vup = vec3(0, 1, 0);
 
             defocus_angle = 0.06f;
-            focus_dist = 10.0f;
             break;
         case 3:
             // Image / Camera params
             aspect_ratio = 16.0f / 9.0f;
             image_width = 1920;
             samples_per_pixel = 500;
-        // image_width = 400;
-        // samples_per_pixel = 100;
             max_depth = 50;
 
             vfov = 20.0f;
@@ -290,7 +298,20 @@ int main() {
             vup = vec3(0, 1, 0);
 
             defocus_angle = 0.0f;
-            focus_dist = 10.0f;
+            break;
+        case 4:
+            // Image / Camera params
+            aspect_ratio = 16.0f / 9.0f;
+            image_width = 1920;
+            samples_per_pixel = 500;
+            max_depth = 50;
+
+            vfov = 20.0f;
+            lookfrom = point3(13, 2, 3);
+            lookat = point3(0, 0, 0);
+            vup = vec3(0, 1, 0);
+
+            defocus_angle = 0.0f;
             break;
     }
     process(choice, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
