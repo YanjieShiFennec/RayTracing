@@ -1,7 +1,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION  // 使第三方库 stb_image_write 成为可执行的源码
-
-#include "stb_image_write.h"    // https://github.com/nothings/stb
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb_image_write.h"    // https://github.com/nothings/stb
 #include "rt_constants.h"
+#include "rtw_stb_image.h"
+
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
@@ -94,6 +96,18 @@ __global__ void create_world_checkered_spheres(hittable_list **d_world) {
     }
 }
 
+__global__ void create_world_earth(hittable_list **d_world, unsigned char *image_texture_data, int width, int height) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        d_world[0] = new hittable_list();
+
+        auto earth_texture = new image_texture(image_texture_data, width, height);
+        auto earth_surface = new lambertian(earth_texture);
+        auto globe = new sphere(point3(0.0f, 0.0f, 0.0f), 2, earth_surface);
+
+        d_world[0]->add(globe);
+    }
+}
+
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel,
                               int max_depth,
                               float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
@@ -156,6 +170,8 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
     checkCudaErrors(cudaMalloc(&d_world, sizeof(hittable_list*)));
     clock_t start, stop;
     start = clock();
+
+    unsigned char *image_texture_data;
     switch (choice) {
         case 1:
             create_world_bouncing_spheres<<<1, 1>>>(d_world, d_node, d_rand_state);
@@ -163,7 +179,25 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
         case 2:
             create_world_checkered_spheres<<<1, 1>>>(d_world);
             break;
+        case 3:
+            int texture_x, texture_y, texture_n;
+            unsigned char *image_texture_data_host = stbi_load("../images/earthmap.jpg", &texture_x, &texture_y,
+                                                               &texture_n, 0);
+            if (image_texture_data_host == nullptr) {
+                std::cerr << "file not found!" << std::endl;
+            }
+
+            size_t texture_size = texture_x * texture_y * texture_n * sizeof(unsigned char);
+
+            checkCudaErrors(
+                cudaMallocManaged(&image_texture_data, texture_size));
+            checkCudaErrors(
+                cudaMemcpy(image_texture_data, image_texture_data_host, texture_size, cudaMemcpyHostToDevice));
+
+            create_world_earth<<<1,1>>>(d_world, image_texture_data, texture_x, texture_y);
+            break;
     }
+
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
@@ -195,6 +229,8 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
     checkCudaErrors(cudaFree(d_node));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(data));
+    if (choice == 3)
+        checkCudaErrors(cudaFree(image_texture_data));
 }
 
 int main() {
@@ -203,7 +239,8 @@ int main() {
     point3 lookfrom, lookat;
     vec3 vup;
 
-    switch (2) {
+    int choice = 3;
+    switch (choice) {
         case 1:
             // Image / Camera params
             aspect_ratio = 16.0f / 9.0f;
@@ -220,16 +257,14 @@ int main() {
 
             defocus_angle = 0.6f;
             focus_dist = 10.0f;
-            process(1, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
-                    defocus_angle, focus_dist);
             break;
         case 2:
             // Image / Camera params
             aspect_ratio = 16.0f / 9.0f;
-        image_width = 1920;
-        samples_per_pixel = 500;
-            // image_width = 400;
-            // samples_per_pixel = 100;
+            image_width = 1920;
+            samples_per_pixel = 500;
+        // image_width = 400;
+        // samples_per_pixel = 100;
             max_depth = 50;
 
             vfov = 20.0f;
@@ -239,9 +274,26 @@ int main() {
 
             defocus_angle = 0.06f;
             focus_dist = 10.0f;
-            process(2, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
-                    defocus_angle, focus_dist);
+            break;
+        case 3:
+            // Image / Camera params
+            aspect_ratio = 16.0f / 9.0f;
+            image_width = 1920;
+            samples_per_pixel = 500;
+        // image_width = 400;
+        // samples_per_pixel = 100;
+            max_depth = 50;
+
+            vfov = 20.0f;
+            lookfrom = point3(0, 0, 12);
+            lookat = point3(0, 0, 0);
+            vup = vec3(0, 1, 0);
+
+            defocus_angle = 0.0f;
+            focus_dist = 10.0f;
             break;
     }
+    process(choice, aspect_ratio, image_width, samples_per_pixel, max_depth, vfov, lookfrom, lookat, vup,
+            defocus_angle, focus_dist);
     return 0;
 }
