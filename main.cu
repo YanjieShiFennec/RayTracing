@@ -112,7 +112,7 @@ __global__ void create_world_perlin_spheres(hittable_list **d_world, curandState
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         d_world[0] = new hittable_list();
 
-        auto pertext = new noise_texture(rand_state[0]);
+        auto pertext = new noise_texture(4, rand_state[0]);
         d_world[0]->add(new sphere(point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(pertext)));
         d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(pertext)));
     }

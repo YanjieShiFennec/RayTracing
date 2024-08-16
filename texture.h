@@ -84,15 +84,16 @@ private:
 
 class noise_texture : public texture {
 public:
-    __device__ noise_texture(curandState &rand_state): noise(perlin(rand_state)) {
+    __device__ noise_texture(float scale, curandState &rand_state) : scale(scale), noise(perlin(rand_state)) {
     }
 
     __device__ color value(float u, float v, const point3 &p) const override {
-        return color(1, 1, 1) * noise.noise(p);
+        return color(1, 1, 1) * noise.noise(scale * p);
     }
 
 private:
     perlin noise;
+    float scale;
 };
 
 #endif // TEXTURE_H
