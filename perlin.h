@@ -19,6 +19,11 @@ public:
         auto v = p.y() - std::floorf(p.y());
         auto w = p.z() - std::floorf(p.z());
 
+        // use a Hermite cubic to round off the interpolation
+        u = u * u * (3 - 2 * u);
+        v = v * v * (3 - 2 * v);
+        w = w * w * (3 - 2 * w);
+
         auto i = int(std::floorf(p.x()));
         auto j = int(std::floorf(p.y()));
         auto k = int(std::floorf(p.z()));
