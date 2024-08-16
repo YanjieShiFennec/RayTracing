@@ -35,6 +35,20 @@ public:
         return perlin_interp(c, u, v, w);
     }
 
+    float turb(const point3 &p, int depth) const {
+        auto accum = 0.0f;
+        auto temp_p = p;
+        auto weight = 1.0f;
+
+        for (int i = 0; i < depth; i++) {
+            accum += weight * noise(temp_p);
+            weight *= 0.5f;
+            temp_p *= 2;
+        }
+
+        return std::fabs(accum);
+    }
+
 private:
     static const int point_count = 256;
     float randfloat[point_count];
@@ -76,8 +90,8 @@ private:
                              * dot(c[i][j][k], weight_v);
                 }
 
-        // map accum range from [-1, +1] to [0, 1]
-        return 0.5f * (1.0f + accum);
+        // accum range [-1, +1]
+        return accum;
     }
 };
 
