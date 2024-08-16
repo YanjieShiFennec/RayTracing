@@ -47,13 +47,13 @@ private:
     int perm_y[point_count];
     int perm_z[point_count];
 
-    __device__ void perlin_generate_perm(int *p, curandState &rand_state) {
+    __device__ static void perlin_generate_perm(int *p, curandState &rand_state) {
         for (int i = 0; i < point_count; i++)
             p[i] = i;
         permute(p, point_count, rand_state);
     }
 
-    __device__ void permute(int *p, int n, curandState &rand_state) {
+    __device__ static void permute(int *p, int n, curandState &rand_state) {
         for (int i = n - 1; i > 0; i--) {
             int target = random_int(rand_state, 0, i);
             int tmp = p[i];
@@ -62,7 +62,7 @@ private:
         }
     }
 
-    __device__ float trilinear_interp(float c[2][2][2], float u, float v, float w) const{
+    __device__ static float trilinear_interp(float c[2][2][2], float u, float v, float w) {
         // 三线性插值
         auto accum = 0.0f;
         for (int i = 0; i < 2; i++)

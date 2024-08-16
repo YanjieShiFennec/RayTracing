@@ -41,8 +41,8 @@ public:
 
     __device__ bvh_node(hittable **objects, size_t start, size_t end) {
         // Build the bounding box of the span of source objects.
-        bbox = aabb_empty;
-        for (size_t object_index=start; object_index < end; object_index++)
+        bbox = aabb::empty;
+        for (size_t object_index = start; object_index < end; object_index++)
             bbox = aabb(bbox, objects[object_index]->bounding_box());
 
         int axis = bbox.longest_axis();
@@ -141,8 +141,6 @@ private:
     hittable *left;
     hittable *right;
     aabb bbox;
-    const interval interval_empty = interval(+infinity, -infinity);
-    const aabb aabb_empty =  aabb(interval_empty, interval_empty, interval_empty);
 };
 
 #endif //BVH_H

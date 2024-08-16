@@ -23,7 +23,7 @@ __device__ void write_color(unsigned char *data, int pixel_index, const color &p
     b = linear_to_gamma(b);
 
     // Translate the [0, 1] component values to the byte range [0, 255].
-    interval intensity(0.000, 0.999);
+    const interval intensity(0.000f, 0.999f);
     data[pixel_index] = int(256 * intensity.clamp(r));
     data[pixel_index + 1] = int(256 * intensity.clamp(g));
     data[pixel_index + 2] = int(256 * intensity.clamp(b));
