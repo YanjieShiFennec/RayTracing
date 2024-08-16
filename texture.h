@@ -80,7 +80,10 @@ public:
     noise_texture(float scale) : scale(scale) {}
 
     color value(float u, float v, const point3 &p) const override {
-        return color(1, 1, 1) * noise.turb(p, 7);
+        // make color proportional to something like a sine function,
+        // and use turbulence to adjust the phase (so it shifts 𝑥 in sin(𝑥)) which makes the stripes undulate.
+        // 让颜色与 sin 函数的值成比例, 并使用扰动函数去调整相位(平移了sin(x)中的x)
+        return color(0.5, 0.5, 0.5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
     }
 
 private:
