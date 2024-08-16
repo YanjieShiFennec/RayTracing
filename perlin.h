@@ -19,6 +19,11 @@ public:
         auto v = p.y() - floorf(p.y());
         auto w = p.z() - floorf(p.z());
 
+        // use a Hermite cubic to round off the interpolation
+        u = u * u * (3 - 2 * u);
+        v = v * v * (3 - 2 * v);
+        w = w * w * (3 - 2 * w);
+
         auto i = int(floorf(p.x()));
         auto j = int(floorf(p.y()));
         auto k = int(floorf(p.z()));
