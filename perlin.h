@@ -15,11 +15,24 @@ public:
     }
 
     float noise(const point3 &p) const {
-        auto i = int(4 * p.x()) & 255;
-        auto j = int(4 * p.y()) & 255;
-        auto k = int(4 * p.z()) & 255;
+        auto u = p.x() - std::floorf(p.x());
+        auto v = p.y() - std::floorf(p.y());
+        auto w = p.z() - std::floorf(p.z());
 
-        return randfloat[perm_x[i] ^ perm_y[j] ^ perm_z[k]];
+        auto i = int(std::floorf(p.x()));
+        auto j = int(std::floorf(p.y()));
+        auto k = int(std::floorf(p.z()));
+
+        // 进行三线性插值平滑噪声
+        float c[2][2][2];
+        for (int di = 0; di < 2; di++)
+            for (int dj = 0; dj < 2; dj++)
+                for (int dk = 0; dk < 2; dk++)
+                    // x & 255: 将 x 截断成 0 - 255 的整数
+                    // ^ 进行异或哈希
+                    c[di][dj][dk] = randfloat[perm_x[(i + di) & 255] ^ perm_x[(j + dj) & 255] ^ perm_x[(k + dk) & 255]];
+
+        return trilinear_interp(c, u, v, w);
     }
 
 private:
@@ -42,6 +55,19 @@ private:
             p[i] = p[target];
             p[target] = tmp;
         }
+    }
+
+    static float trilinear_interp(float c[2][2][2], float u, float v, float w) {
+        // 三线性插值
+        auto accum = 0.0f;
+        for (int i = 0; i < 2; i++)
+            for (int j = 0; j < 2; j++)
+                for (int k = 0; k < 2; k++)
+                    accum += (i * u + (1 - i) * (1 - u))
+                             * (j * v + (1 - j) * (1 - v))
+                             * (k * w + (1 - k) * (1 - w))
+                             * c[i][j][k];
+        return accum;
     }
 };
 
