@@ -7,6 +7,7 @@
 #include "hittable.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "quad.h"
 #include "camera.h"
 #include "material.h"
 #include "bvh.h"
@@ -118,6 +119,31 @@ __global__ void create_world_perlin_spheres(hittable_list **d_world, curandState
     }
 }
 
+__global__ void create_world_quads(hittable_list **d_world) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        d_world[0] = new hittable_list();
+
+        // Materials
+        auto left_red = new lambertian(color(1.0f, 0.2f, 0.2f));
+        auto back_green = new lambertian(color(0.2f, 1.0f, 0.2f));
+        auto right_blue = new lambertian(color(0.2f, 0.2f, 1.0f));
+        auto upper_orange = new lambertian(color(1.0f, 0.5f, 0.0f));
+        auto lower_teal = new lambertian(color(0.2f, 0.8f, 0.8f));
+
+        // Quads
+        d_world[0]->add(new quad(point3(-3.0f, -2.0f, 5.0f), vec3(0.0f, 0.0f, -4.0f), vec3(0.0f, 4.0f, 0.0f),
+                                 left_red));
+        d_world[0]->add(
+            new quad(point3(-2.0f, -2.0f, 0.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 4.0f, 0.0f), back_green));
+        d_world[0]->add(new quad(point3(3.0f, -2.0f, 1.0f), vec3(0.0f, 0.0f, 4.0f), vec3(0.0f, 4.0f, 0.0f),
+                                 right_blue));
+        d_world[0]->add(
+            new quad(point3(-2.0f, 3.0f, 1.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 4.0f), upper_orange));
+        d_world[0]->add(
+            new quad(point3(-2.0f, -3.0f, 5.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -4.0f), lower_teal));
+    }
+}
+
 __global__ void create_camera(camera **cam, float aspect_ratio, int image_width, int samples_per_pixel,
                               int max_depth,
                               float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
@@ -210,6 +236,9 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
         case 4:
             create_world_perlin_spheres<<<1, 1>>>(d_world, d_rand_state);
             break;
+        case 5:
+            create_world_quads<<<1, 1>>>(d_world);
+            break;
     }
 
     checkCudaErrors(cudaGetLastError());
@@ -253,7 +282,7 @@ int main() {
     point3 lookfrom, lookat;
     vec3 vup;
 
-    int choice = 4;
+    int choice = 5;
     switch (choice) {
         case 1:
             // Image / Camera params
@@ -308,6 +337,20 @@ int main() {
 
             vfov = 20.0f;
             lookfrom = point3(13, 2, 3);
+            lookat = point3(0, 0, 0);
+            vup = vec3(0, 1, 0);
+
+            defocus_angle = 0.0f;
+            break;
+        case 5:
+            // Image / Camera params
+            aspect_ratio = 1.0f;
+            image_width = 1920;
+            samples_per_pixel = 500;
+            max_depth = 50;
+
+            vfov = 80.0f;
+            lookfrom = point3(0, 0, 9);
             lookat = point3(0, 0, 0);
             vup = vec3(0, 1, 0);
 
