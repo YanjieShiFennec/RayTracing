@@ -5,6 +5,7 @@
 #include "hittable_list.h"
 #include "material.h"
 #include "sphere.h"
+#include "quad.h"
 #include "bvh.h"
 #include "texture.h"
 
@@ -176,8 +177,45 @@ void perlin_spheres() {
     cam.render(world, file_name);
 }
 
+void quads() {
+    hittable_list world;
+
+    // Materials
+    auto left_red = make_shared<lambertian>(color(1.0f, 0.2f, 0.2f));
+    auto back_green = make_shared<lambertian>(color(0.2f, 1.0f, 0.2f));
+    auto right_blue = make_shared<lambertian>(color(0.2f, 0.2f, 1.0f));
+    auto upper_orange = make_shared<lambertian>(color(1.0f, 0.5f, 0.0f));
+    auto lower_teal = make_shared<lambertian>(color(0.2f, 0.8f, 0.8f));
+
+    // Quads
+    world.add(make_shared<quad>(point3(-3.0f, -2.0f, 5.0f), vec3(0.0f, 0.0f, -4.0f), vec3(0.0f, 4.0f, 0.0f), left_red));
+    world.add(
+            make_shared<quad>(point3(-2.0f, -2.0f, 0.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 4.0f, 0.0f), back_green));
+    world.add(make_shared<quad>(point3(3.0f, -2.0f, 1.0f), vec3(0.0f, 0.0f, 4.0f), vec3(0.0f, 4.0f, 0.0f), right_blue));
+    world.add(
+            make_shared<quad>(point3(-2.0f, 3.0f, 1.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 4.0f), upper_orange));
+    world.add(
+            make_shared<quad>(point3(-2.0f, -3.0f, 5.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -4.0f), lower_teal));
+    camera cam;
+
+    cam.aspect_ratio = 1.0f;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+
+    cam.vfov = 80.0f;
+    cam.lookfrom = point3(0, 0, 9);
+    cam.lookat = point3(0, 0, 0);
+    cam.vup = vec3(0, 1, 0);
+
+    cam.defocus_angle = 0.0f;
+
+    char file_name[] = "../RayTracing.png";
+    cam.render(world, file_name);
+}
+
 int main() {
-    switch (4) {
+    switch (5) {
         case 1:
             bouncing_spheres();
             break;
@@ -189,6 +227,9 @@ int main() {
             break;
         case 4:
             perlin_spheres();
+            break;
+        case 5:
+            quads();
             break;
     }
 }

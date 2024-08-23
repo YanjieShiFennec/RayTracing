@@ -26,7 +26,7 @@ private:
     // 根据输入 t 确定最终光线到达的点 P: point3 at(float t)
     point3 orig; // 光源坐标
     vec3 dir; // 光线方向
-    float tm;
+    float tm; // 动态模糊
 };
 
 #endif // RAY_H
