@@ -77,7 +77,6 @@ public:
             return y.size() > z.size() ? 1 : 2;
     }
 
-    static const aabb empty, universe;
 private:
     __device__ void pad_to_minimums() {
         // Adjust the AABB so that no side is narrower than some delta, padding if necessary.
@@ -88,8 +87,5 @@ private:
         if (z.size() < delta) z = z.expand(delta);
     }
 };
-
-const aabb aabb::empty = aabb(interval::empty, interval::empty, interval::empty);
-const aabb aabb::universe = aabb(interval::universe, interval::universe, interval::universe);
 
 #endif //AABB_H
