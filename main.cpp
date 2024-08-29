@@ -230,6 +230,7 @@ void simple_light() {
     // Note that the light is brighter than (1,1,1). This allows it to be bright enough to light things.
     auto diff_light = make_shared<diffuse_light>(color(4.0f, 4.0f, 4.0f));
     world.add(make_shared<quad>(point3(3.0f, 1.0f, -2.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f), diff_light));
+    world.add(make_shared<sphere>(point3(0.0f, 7.0f, 0.0f), 2.0f, diff_light));
 
     camera cam;
 
