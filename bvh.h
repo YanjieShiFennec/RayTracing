@@ -9,10 +9,10 @@
 
 #include <algorithm>
 
-void swap(shared_ptr<hittable> &p1, shared_ptr<hittable> &p2) {
-    shared_ptr<hittable> temp = p1;
-    p1 = p2;
-    p2 = temp;
+void swap(shared_ptr<hittable*> p1, shared_ptr<hittable*> p2) {
+    hittable *temp = *p1;
+    *p1 = *p2;
+    *p2 = temp;
 }
 
 void bubble_sort(std::vector<shared_ptr<hittable>> &objects, size_t start, size_t end, int axis_index) {
