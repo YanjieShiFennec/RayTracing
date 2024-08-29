@@ -27,6 +27,7 @@ private:
     color albedo;
 };
 
+// 棋盘纹理
 class checker_texture : public texture {
 public:
     checker_texture(float scale, shared_ptr<texture> even, shared_ptr<texture> odd) : inv_scale(1.0f / scale),
@@ -51,6 +52,7 @@ private:
     shared_ptr<texture> odd;
 };
 
+// 图片纹理
 class image_texture : public texture {
 public:
     image_texture(const char *filename) : image(filename) {}
@@ -75,6 +77,7 @@ private:
     rtw_image image;
 };
 
+// 柏林噪声纹理
 class noise_texture : public texture {
 public:
     noise_texture(float scale) : scale(scale) {}

@@ -87,6 +87,7 @@ void bouncing_spheres() {
     cam.image_width = 400;
     cam.samples_per_pixel = 10;
     cam.max_depth = 50;
+    cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
     cam.lookfrom = point3(13, 2, 3);
@@ -119,6 +120,7 @@ void checkered_spheres() {
     cam.image_width = 400;
     cam.samples_per_pixel = 10;
     cam.max_depth = 50;
+    cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
     cam.lookfrom = point3(13, 2, 3);
@@ -140,6 +142,7 @@ void earth() {
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
     cam.max_depth = 50;
+    cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
     cam.lookfrom = point3(0, 0, 12);
@@ -165,6 +168,7 @@ void perlin_spheres() {
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
     cam.max_depth = 50;
+    cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
     cam.lookfrom = point3(13, 2, 3);
@@ -196,12 +200,14 @@ void quads() {
             make_shared<quad>(point3(-2.0f, 3.0f, 1.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 4.0f), upper_orange));
     world.add(
             make_shared<quad>(point3(-2.0f, -3.0f, 5.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -4.0f), lower_teal));
+
     camera cam;
 
     cam.aspect_ratio = 1.0f;
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
     cam.max_depth = 50;
+    cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 80.0f;
     cam.lookfrom = point3(0, 0, 9);
@@ -214,8 +220,38 @@ void quads() {
     cam.render(world, file_name);
 }
 
+void simple_light() {
+    hittable_list world;
+
+    auto per_text = make_shared<noise_texture>(4.0f);
+    world.add(make_shared<sphere>(point3(0.0f, -1000.0f, 0.0f), 1000.0f, make_shared<lambertian>(per_text)));
+    world.add(make_shared<sphere>(point3(0.0f, 2.0f, 0.0f), 2.0f, make_shared<lambertian>(per_text)));
+
+    // Note that the light is brighter than (1,1,1). This allows it to be bright enough to light things.
+    auto diff_light = make_shared<diffuse_light>(color(4.0f, 4.0f, 4.0f));
+    world.add(make_shared<quad>(point3(3.0f, 1.0f, -2.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f), diff_light));
+
+    camera cam;
+
+    cam.aspect_ratio = 16.0f / 9.0f;
+    cam.image_width = 400;
+    cam.samples_per_pixel = 100;
+    cam.max_depth = 50;
+    cam.background = color(0.0f, 0.0f, 0.0f);
+
+    cam.vfov = 20.0f;
+    cam.lookfrom = point3(26.0f, 3.0f, 6.0f);
+    cam.lookat = point3(0.0f, 2.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
+
+    cam.defocus_angle = 0.0f;
+
+    char file_name[] = "../RayTracing.png";
+    cam.render(world, file_name);
+}
+
 int main() {
-    switch (5) {
+    switch (6) {
         case 1:
             bouncing_spheres();
             break;
@@ -230,6 +266,9 @@ int main() {
             break;
         case 5:
             quads();
+            break;
+        case 6:
+            simple_light();
             break;
     }
 }

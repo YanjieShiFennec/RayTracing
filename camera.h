@@ -15,7 +15,8 @@ public:
     float aspect_ratio = 1.0f;  // Ratio of image width over height
     int image_width = 100;      // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
-    int max_depth = 10;         // Maximum number of ray bounces into scene
+    int max_depth = 10;         // Maximum number of ray bounces into
+    color background;           // Scene background color
 
     // 镜头设置参数
     float vfov = 90.0f;           // Vertical view angle (field of view) 垂直可视角度
@@ -134,23 +135,35 @@ private:
             return color(0, 0, 0);
 
         hit_record rec;
-        // 击中球面的光线
+
+        // If the ray hits nothing, return the background color.
         // 光线反射时由于浮点计算误差导致光源结果可能位于球面内部，此时光线第一次击中球体的距离 t 会非常小，设置 interval 0.001 忽略这种情况
-        if (world.hit(r, interval(0.001f, infinity), rec)) {
-            ray scattered;
-            color attenuation;
-            if (rec.mat->scatter(r, rec, attenuation, scattered))
-                return attenuation * ray_color(scattered, depth - 1, world);
-            return color(0, 0, 0);
+        if (!world.hit(r, interval(0.001f, infinity), rec)) {
+            /*
+            // 返回线性渐变
+            // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
+            // -1.0 < y < 1.0
+            vec3 unit_direction = unit_vector(r.direction());
+            // 0.0 < a < 1.0
+            float a = 0.5f * (unit_direction.y() + 1.0f);
+            // 线性渐变
+            return (1.0f - a) * color(1.0f, 1.0f, 1.0f) + a * color(0.5f, 0.7f, 1.0f);
+             */
+
+            // 返回固定颜色
+            return background;
         }
 
-        // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
-        // -1.0 < y < 1.0
-        vec3 unit_direction = unit_vector(r.direction());
-        // 0.0 < a < 1.0
-        float a = 0.5f * (unit_direction.y() + 1.0f);
-        // 线性渐变
-        return (1.0f - a) * color(1.0f, 1.0f, 1.0f) + a * color(0.5f, 0.7f, 1.0f);
+        ray scattered;
+        color attenuation;
+        color color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+
+        if (!rec.mat->scatter(r, rec, attenuation, scattered))
+            return color_from_emission;
+
+        color color_from_scatter = attenuation * ray_color(scattered, depth - 1, world);
+
+        return color_from_emission + color_from_scatter;
     }
 };
 
