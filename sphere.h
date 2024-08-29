@@ -48,7 +48,7 @@ public:
         float h = dot(r.direction(), oc);
         float c = oc.length_squared() - radius * radius;
         auto discriminant = h * h - a * c;
-        if (discriminant < 0) {
+        if (discriminant < 0.0f) {
             return false;
         }
 
@@ -115,7 +115,7 @@ private:
         auto phi = std::atan2f(-p.z(), p.x()) + pi;
 
         // [0, 1]
-        u = phi / (2 * pi);
+        u = phi / (2.0f * pi);
         // [0, 1]
         v = theta / pi;
     }

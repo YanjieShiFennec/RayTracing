@@ -27,7 +27,7 @@ inline float degrees_to_radians(float degrees) {
 
 inline float random_float() {
     // Returns a random real in [0, 1).
-    static std::uniform_real_distribution<float> distribution(0.0, 1.0);
+    static std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     static std::mt19937 generator;
     return distribution(generator);
 }

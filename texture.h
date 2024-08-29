@@ -59,7 +59,7 @@ public:
 
     color value(float u, float v, const point3 &p) const override {
         // if we have no texture data, then return solid cyan as a debugging aid.
-        if (image.height() <= 0) return color(0, 0, 1);
+        if (image.height() <= 0) return color(0.0f, 0.0f, 1.0f);
 
         // Clamp input texture coordinates to [0, 1] x [1, 0]
         u = interval(0.0f, 1.0f).clamp(u);
@@ -86,7 +86,7 @@ public:
         // make color proportional to something like a sine function,
         // and use turbulence to adjust the phase (so it shifts 𝑥 in sin(𝑥)) which makes the stripes undulate.
         // 让颜色与 sin 函数的值成比例, 并使用扰动函数去调整相位(平移了sin(x)中的x)
-        return color(0.5, 0.5, 0.5) * (1 + std::sin(scale * p.z() + 10 * noise.turb(p, 7)));
+        return color(0.5f, 0.5f, 0.5f) * (1.0f + std::sinf(scale * p.z() + 10.0f * noise.turb(p, 7)));
     }
 
 private:

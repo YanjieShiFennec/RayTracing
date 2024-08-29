@@ -30,10 +30,10 @@ void bouncing_spheres() {
             auto choose_mat = random_float();
             point3 center(a + 0.9f * random_float(), 0.2f, b + 0.9f * random_float());
 
-            if ((center - point3(4.0f, 0.2f, 0.0f)).length() > 0.9) {
+            if ((center - point3(4.0f, 0.2f, 0.0f)).length() > 0.9f) {
                 shared_ptr<material> sphere_material;
 
-                if (choose_mat < 0.8) {
+                if (choose_mat < 0.8f) {
                     // diffuse
                     auto albedo = color::random() * color::random();
                     sphere_material = make_shared<lambertian>(albedo);
@@ -54,14 +54,14 @@ void bouncing_spheres() {
         }
     }
 
-    auto material1 = make_shared<dielectric>(1.5);
-    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+    auto material1 = make_shared<dielectric>(1.5f);
+    world.add(make_shared<sphere>(point3(0.0f, 1.0f, 0.0f), 1.0f, material1));
 
-    auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
-    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+    auto material2 = make_shared<lambertian>(color(0.4f, 0.2f, 0.1f));
+    world.add(make_shared<sphere>(point3(-4.0f, 1.0f, 0.0f), 1.0f, material2));
 
-    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+    auto material3 = make_shared<metal>(color(0.7f, 0.6f, 0.5f), 0.0f);
+    world.add(make_shared<sphere>(point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
 
     // create bvh
     // world.print();
@@ -90,9 +90,9 @@ void bouncing_spheres() {
     cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
-    cam.lookfrom = point3(13, 2, 3);
-    cam.lookat = point3(0, 0, -1);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookfrom = point3(13.0f, 2.0f, 3.0f);
+    cam.lookat = point3(0.0f, 0.0f, -1.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
 
     cam.defocus_angle = 0.6f;
     cam.focus_dist = 10.0f;
@@ -123,9 +123,9 @@ void checkered_spheres() {
     cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
-    cam.lookfrom = point3(13, 2, 3);
-    cam.lookat = point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookfrom = point3(13.0f, 2.0f, 3.0f);
+    cam.lookat = point3(0.0f, 0.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
 
     char file_name[] = "../RayTracing.png";
     cam.render(world, file_name);
@@ -134,7 +134,7 @@ void checkered_spheres() {
 void earth() {
     auto earth_texture = make_shared<image_texture>("earthmap.jpg");
     auto earth_surface = make_shared<lambertian>(earth_texture);
-    auto globe = make_shared<sphere>(point3(0, 0, 0), 2, earth_surface);
+    auto globe = make_shared<sphere>(point3(0.0f, 0.0f, 0.0f), 2.0f, earth_surface);
 
     camera cam;
 
@@ -145,9 +145,9 @@ void earth() {
     cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
-    cam.lookfrom = point3(0, 0, 12);
-    cam.lookat = point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookfrom = point3(0.0f, 0.0f, 12.0f);
+    cam.lookat = point3(0.0f, 0.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
 
     cam.defocus_angle = 0.0f;
 
@@ -164,16 +164,16 @@ void perlin_spheres() {
 
     camera cam;
 
-    cam.aspect_ratio = 16.0 / 9.0f;
+    cam.aspect_ratio = 16.0f / 9.0f;
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
     cam.max_depth = 50;
     cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 20.0f;
-    cam.lookfrom = point3(13, 2, 3);
-    cam.lookat = point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookfrom = point3(13.0f, 2.0f, 3.0f);
+    cam.lookat = point3(0.0f, 0.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
 
     cam.defocus_angle = 0.0f;
 
@@ -210,9 +210,9 @@ void quads() {
     cam.background = color(0.7f, 0.8f, 1.0f);
 
     cam.vfov = 80.0f;
-    cam.lookfrom = point3(0, 0, 9);
-    cam.lookat = point3(0, 0, 0);
-    cam.vup = vec3(0, 1, 0);
+    cam.lookfrom = point3(0.0f, 0.0f, 9.0f);
+    cam.lookat = point3(0.0f, 0.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
 
     cam.defocus_angle = 0.0f;
 

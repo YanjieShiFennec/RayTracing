@@ -77,7 +77,7 @@ public:
     }
 
     virtual bool is_interior(float a, float b, hit_record &rec) const {
-        interval unit_interval = interval(0, 1);
+        interval unit_interval = interval(0.0f, 1.0f);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
 

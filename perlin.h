@@ -7,7 +7,7 @@ class perlin {
 public:
     perlin() {
         for (int i = 0; i < point_count; i++)
-            randvec[i] = unit_vector(vec3::random(-1, 1));
+            randvec[i] = unit_vector(vec3::random(-1.0f, 1.0f));
 
         perlin_generate_perm(perm_x);
         perlin_generate_perm(perm_y);

@@ -20,9 +20,9 @@ public:
 
     // 镜头设置参数
     float vfov = 90.0f;           // Vertical view angle (field of view) 垂直可视角度
-    point3 lookfrom = point3(0, 0, 0);    // Point camera is looking from
-    point3 lookat = point3(0, 0, -1);     // Point camera is looking at
-    vec3 vup = vec3(0, 1, 0);             // Camera-relative "up" direction
+    point3 lookfrom = point3(0.0f, 0.0f, 0.0f);    // Point camera is looking from
+    point3 lookat = point3(0.0f, 0.0f, -1.0f);     // Point camera is looking at
+    vec3 vup = vec3(0.0f, 1.0f, 0.0f);             // Camera-relative "up" direction
 
     // 景深效果参数
     float defocus_angle = 0.0f;   // Variant angle of rays through each pixel. 0 表示不启用景深效果
@@ -37,7 +37,7 @@ public:
         for (int j = 0; j < image_height; j++) {
             std::clog << "\rScan lines remaining: " << (image_height - j) << ' ' << std::flush;
             for (int i = 0; i < image_width; i++) {
-                color pixel_color(0, 0, 0);
+                color pixel_color(0.0f, 0.0f, 0.0f);
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
                     ray r = get_ray(i, j);
                     pixel_color += ray_color(r, max_depth, world);
@@ -132,7 +132,7 @@ private:
     color ray_color(const ray &r, int depth, const hittable &world) const {
         // If we've exceeded the ray bounce limit, no more light is gathered.
         if (depth <= 0)
-            return color(0, 0, 0);
+            return color(0.0f, 0.0f, 0.0f);
 
         hit_record rec;
 

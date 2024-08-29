@@ -9,9 +9,9 @@
 using color = vec3;
 
 inline float linear_to_gamma(float linear_component) {
-    if (linear_component > 0)
+    if (linear_component > 0.0f)
         return sqrt(linear_component);
-    return 0;
+    return 0.0f;
 }
 
 void write_color(int rgb[3], const color &pixel_color) {

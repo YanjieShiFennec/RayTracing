@@ -7,7 +7,7 @@ class vec3 {
 public:
     float e[3];
 
-    vec3() : e{0, 0, 0} {}
+    vec3() : e{0.0f, 0.0f, 0.0f} {}
 
     vec3(float e0, float e1, float e2) : e{e0, e1, e2} {}
 
@@ -118,7 +118,7 @@ inline vec3 unit_vector(const vec3 &v) {
 
 inline vec3 random_in_unit_disk() {
     while (true) {
-        auto p = vec3(random_float(-1.0f, 1.0f), random_float(-1.0f, 1.0f), 0);
+        auto p = vec3(random_float(-1.0f, 1.0f), random_float(-1.0f, 1.0f), 0.0f);
         if (p.length_squared() < 1)
             return p;
     }
@@ -126,8 +126,8 @@ inline vec3 random_in_unit_disk() {
 
 inline vec3 random_in_unit_sphere() {
     while (true) {
-        auto p = vec3::random(-1, 1);
-        if (p.length_squared() < 1)
+        auto p = vec3::random(-1.0f, 1.0f);
+        if (p.length_squared() < 1.0f)
             return p;
     }
 }
@@ -140,7 +140,7 @@ inline vec3 random_unit_vector() {
 // 从球体表面向外发射随机方向的光线
 inline vec3 random_on_hemisphere(const vec3 &normal) {
     vec3 on_unit_sphere = random_unit_vector();
-    if (dot(on_unit_sphere, normal) > 0.0)
+    if (dot(on_unit_sphere, normal) > 0.0f)
         // 与球体法向量同向
         return on_unit_sphere;
     else
@@ -150,7 +150,7 @@ inline vec3 random_on_hemisphere(const vec3 &normal) {
 
 // 镜面反射
 inline vec3 reflect(const vec3 &v, const vec3 &n) {
-    return v - 2 * dot(v, n) * n;
+    return v - 2.0f * dot(v, n) * n;
 }
 
 // 折射

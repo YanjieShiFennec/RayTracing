@@ -78,7 +78,7 @@ public:
         float cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0f);
         float sin_theta = sqrt(1.0f - cos_theta * cos_theta);
 
-        bool cannot_refract = ri * sin_theta > 1.0; // 折射还是全反射
+        bool cannot_refract = ri * sin_theta > 1.0f; // 折射还是全反射
         vec3 direction;
         if (cannot_refract || reflectance(cos_theta, ri) > random_float())
             direction = reflect(unit_direction, rec.normal);
