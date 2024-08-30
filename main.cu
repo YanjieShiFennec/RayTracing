@@ -154,9 +154,27 @@ __global__ void create_world_simple_light(hittable_list **d_world, curandState *
         d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(per_text)));
 
         auto diff_light = new diffuse_light(color(4.0f, 4.0f, 4.0f));
-       d_world[0]->add(new sphere(point3(0,7,0), 2, diff_light));
+        d_world[0]->add(new sphere(point3(0, 7, 0), 2, diff_light));
         d_world[0]->add(new quad(point3(3.0f, 1.0f, -2.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f),
                                  diff_light));
+    }
+}
+
+__global__ void create_world_cornell_box(hittable_list **d_world) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        d_world[0] = new hittable_list();
+
+        auto red = new lambertian(color(.65, .05, .05));
+        auto white = new lambertian(color(.73, .73, .73));
+        auto green = new lambertian(color(.12, .45, .15));
+        auto light = new diffuse_light(color(15, 15, 15));
+
+        d_world[0]->add(new quad(point3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
+        d_world[0]->add(new quad(point3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
+        d_world[0]->add(new quad(point3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), light));
+        d_world[0]->add(new quad(point3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
+        d_world[0]->add(new quad(point3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white));
+        d_world[0]->add(new quad(point3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
     }
 }
 
@@ -267,6 +285,10 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
         case 6:
             create_world_simple_light<<<1, 1>>>(d_world, d_rand_state);
             break;
+        case 7:
+            // This image is very noisy because the light is small, so most random rays don't hit the light source.
+            create_world_cornell_box<<<1, 1>>>(d_world);
+            break;
     }
 
     checkCudaErrors(cudaGetLastError());
@@ -306,16 +328,16 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
 }
 
 int main() {
+    // Image / Camera params
     float aspect_ratio = 16.0f / 9.0f, vfov = 20.0f, defocus_angle = 0.0f, focus_dist = 10.0f;
     int image_width = 1920, samples_per_pixel = 500, max_depth = 50;
     point3 lookfrom, lookat;
     vec3 vup = vec3(0.0f, 1.0f, 0.0f);
     color background = color(0.7f, 0.8f, 1.0f);
 
-    int choice = 6;
+    int choice = 7;
     switch (choice) {
         case 1:
-            // Image / Camera params
             // image_width = 1920;
             // samples_per_pixel = 500;
             image_width = 400;
@@ -327,24 +349,20 @@ int main() {
             defocus_angle = 0.6f;
             break;
         case 2:
-            // Image / Camera params
             lookfrom = point3(13, 2, 3);
             lookat = point3(0, 0, 0);
 
             defocus_angle = 0.06f;
             break;
         case 3:
-            // Image / Camera params
             lookfrom = point3(0, 0, 12);
             lookat = point3(0, 0, 0);
             break;
         case 4:
-            // Image / Camera params
             lookfrom = point3(13, 2, 3);
             lookat = point3(0, 0, 0);
             break;
         case 5:
-            // Image / Camera params
             aspect_ratio = 1.0f;
 
             vfov = 80.0f;
@@ -352,11 +370,19 @@ int main() {
             lookat = point3(0, 0, 0);
             break;
         case 6:
-            // Image / Camera params
             background = color(0.0f, 0.0f, 0.0f);
 
             lookfrom = point3(26.0f, 3.0f, 6.0f);
             lookat = point3(0.0f, 2.0f, 0.0f);
+            break;
+        case 7:
+            aspect_ratio = 1.0f;
+            image_width = 600;
+            background = color(0.0f, 0.0f, 0.0f);
+
+            vfov = 40.0f;
+            lookfrom = point3(278, 278, -800);
+            lookat = point3(278, 278, 0);
             break;
     }
     process(choice, aspect_ratio, image_width, samples_per_pixel, max_depth, background, vfov, lookfrom, lookat, vup,
