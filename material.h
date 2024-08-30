@@ -14,7 +14,7 @@ public:
 
     __device__ virtual color emitted(float u, float v, const point3 &p) const {
         // 非发光体默认返回黑色
-        return color(0, 0, 0);
+        return color(0.0f, 0.0f, 0.0f);
     }
 };
 
@@ -62,7 +62,7 @@ public:
         reflected = unit_vector(reflected) + (fuzz * random_unit_vector(rand_state));
         scattered = ray(rec.p, reflected, r_in.time());
         attenuation = albedo;
-        return (dot(scattered.direction(), rec.normal) > 0);
+        return (dot(scattered.direction(), rec.normal) > 0.0f);
     }
 
 private:
@@ -79,14 +79,14 @@ public:
     __device__ bool scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered,
                             curandState &rand_state)
     const override {
-        attenuation = color(1.0, 1.0, 1.0); // 玻璃表面不吸收光线
+        attenuation = color(1.0f, 1.0f, 1.0f); // 玻璃表面不吸收光线
         float ri = rec.front_face ? (1.0f / refraction_index) : refraction_index;
 
         vec3 unit_direction = unit_vector(r_in.direction());
         float cos_theta = fminf(dot(-unit_direction, rec.normal), 1.0f);
         float sin_theta = sqrtf(1.0f - cos_theta * cos_theta);
 
-        bool cannot_refract = ri * sin_theta > 1.0; // 折射还是全反射
+        bool cannot_refract = ri * sin_theta > 1.0f; // 折射还是全反射
         vec3 direction;
         if (cannot_refract || reflectance(cos_theta, ri) > random_float(rand_state))
             direction = reflect(unit_direction, rec.normal);

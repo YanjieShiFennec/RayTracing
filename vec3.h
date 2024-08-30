@@ -47,7 +47,7 @@ public:
     }
 
     __host__ __device__ vec3 &operator/=(float t) {
-        return *this *= 1.0 / t;
+        return *this *= 1.0f / t;
     }
 
     __host__ __device__ float length() const {
@@ -130,7 +130,7 @@ __host__ __device__ inline vec3 unit_vector(const vec3 &v) {
 
 __device__ inline vec3 random_in_unit_disk(curandState &rand_state) {
     while (true) {
-        auto p = vec3(random_float(rand_state, -1.0f, 1.0f), random_float(rand_state, -1.0f, 1.0f), 0);
+        auto p = vec3(random_float(rand_state, -1.0f, 1.0f), random_float(rand_state, -1.0f, 1.0f), 0.0f);
         if (p.length_squared() < 1.0f)
             return p;
     }
@@ -152,7 +152,7 @@ __device__ inline vec3 random_unit_vector(curandState &rand_state) {
 // 从球体表面向外发射随机方向的光线
 __device__ inline vec3 random_on_hemisphere(const vec3 &normal, curandState &rand_state) {
     vec3 on_unit_sphere = random_unit_vector(rand_state);
-    if (dot(on_unit_sphere, normal) > 0.0)
+    if (dot(on_unit_sphere, normal) > 0.0f)
         // 与球体法向量同向
         return on_unit_sphere;
     // 与球体法向量反向，反转

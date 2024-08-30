@@ -20,7 +20,7 @@ public:
     __device__ void set_face_normal(const ray &r, const vec3 &outward_normal) {
         // outward_normal 指向球面外的法向量，且要求长度等于单位长度
         // Sets the hit record normal vector.
-        front_face = dot(r.direction(), outward_normal) < 0;
+        front_face = dot(r.direction(), outward_normal) < 0.0f;
         normal = front_face ? outward_normal : -outward_normal;
     }
 };

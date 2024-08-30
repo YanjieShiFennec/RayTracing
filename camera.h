@@ -15,9 +15,9 @@ public:
 
     // 镜头设置参数
     float vfov = 90.0f; // Vertical view angle (field of view) 垂直可视角度
-    point3 lookfrom = point3(0, 0, 0); // Point camera is looking from
-    point3 lookat = point3(0, 0, -1); // Point camera is looking at
-    vec3 vup = vec3(0, 1, 0); // Camera-relative "up" direction
+    point3 lookfrom = point3(0.0f, 0.0f, 0.0f); // Point camera is looking from
+    point3 lookat = point3(0.0f, 0.0f, -1.0f); // Point camera is looking at
+    vec3 vup = vec3(0.0f, 1.0f, 0.0f); // Camera-relative "up" direction
 
     // 景深效果参数
     float defocus_angle = 0.0f; // Variant angle of rays through each pixel. 0 表示不启用景深效果
@@ -43,7 +43,7 @@ public:
                 int pixel_index = channels * index;
                 int color_stack_index = max_depth * index * 2;
 
-                color pixel_color(0, 0, 0);
+                color pixel_color(0.0f, 0.0f, 0.0f);
                 curandState local_rand_state = rand_state[pixel_index / channels];
 
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
@@ -78,7 +78,7 @@ public:
                     d_color_stack[i] = attenuation;
                     cur_ray = scattered;
                 } else {
-                    d_color_stack[i] = color(0, 0, 0);
+                    d_color_stack[i] = color(0.0f, 0.0f, 0.0f);
                     index = i;
                     break;
                 }
@@ -90,19 +90,19 @@ public:
                 // 0.0 < a < 1.0
                 float a = 0.5f * (unit_direction.y() + 1.0f);
                 // 线性渐变
-                vec3 c = (1.0f - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
+                vec3 c = (1.0f - a) * color(1.0f, 1.0f, 1.0f) + a * color(0.5f, 0.7f, 1.0f);
                 return cur_attenuation * c;
                 */
 
                 // If the ray hits nothing, return the background color.
                 d_color_stack[i] = background;
-                d_color_stack[depth + i] = color(0, 0, 0);
+                d_color_stack[depth + i] = color(0.0f, 0.0f, 0.0f);
                 index = i;
                 break;
             }
         }
 
-        color result = color(1, 1, 1);
+        color result = color(1.0f, 1.0f, 1.0f);
         for (int i = index; i >= 0; i--)
             result = result * d_color_stack[i] + d_color_stack[depth + i];
 
@@ -111,7 +111,7 @@ public:
 
     __device__ vec3 sample_square(curandState &local_rand_state) {
         // Returns the vector to a random point in the [-0.5, -0.5]-[+0.5, +0,5] unit square.
-        return vec3(random_float(local_rand_state) - 0.5, random_float(local_rand_state) - 0.5, 0);
+        return vec3(random_float(local_rand_state) - 0.5f, random_float(local_rand_state) - 0.5f, 0.0f);
     }
 
     __device__ ray get_ray(int i, int j, curandState &local_rand_state) {
@@ -123,7 +123,7 @@ public:
                             + ((i + offset.x()) * pixel_delta_u)
                             + ((j + offset.y()) * pixel_delta_v);
 
-        auto ray_origin = (defocus_angle <= 0) ? camera_center : defocus_disk_sample(local_rand_state);
+        auto ray_origin = (defocus_angle <= 0.0f) ? camera_center : defocus_disk_sample(local_rand_state);
         auto ray_direction = pixel_sample - ray_origin;
         float ray_time = random_float(local_rand_state);
 
@@ -176,7 +176,7 @@ private:
 
         // Calculate the location of the upper left pixel.
         auto viewport_upper_left = camera_center - (focus_dist * w) - viewport_u / 2.0f - viewport_v / 2.0f;
-        pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+        pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
         // Calculate the camera defocus disk basis vectors.
         float defocus_radius = focus_dist * tanf(degrees_to_radians(defocus_angle / 2.0f));

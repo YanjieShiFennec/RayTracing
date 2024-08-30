@@ -7,7 +7,7 @@ class perlin {
 public:
     __device__ perlin(curandState &rand_state) {
         for (int i = 0; i < point_count; i++)
-            randvec[i] = unit_vector(vec3::random(rand_state, -1, 1));
+            randvec[i] = unit_vector(vec3::random(rand_state, -1.0f, 1.0f));
 
         perlin_generate_perm(perm_x, rand_state);
         perlin_generate_perm(perm_y, rand_state);
@@ -43,7 +43,7 @@ public:
         for (int i = 0; i < depth; i++) {
             accum += weight * noise(temp_p);
             weight *= 0.5f;
-            temp_p *= 2;
+            temp_p *= 2.0f;
         }
 
         return fabsf(accum);

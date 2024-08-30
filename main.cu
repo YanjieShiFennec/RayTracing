@@ -44,41 +44,41 @@ __global__ void create_world_bouncing_spheres(hittable_list **d_world, hittable 
         for (int a = -1 * n; a < n; a++) {
             for (int b = -1 * n; b < n; b++) {
                 float choose_mat = random_float(local_rand_state);
-                point3 center(a + 0.9f * random_float(local_rand_state), 0.2,
+                point3 center(a + 0.9f * random_float(local_rand_state), 0.2f,
                               b + 0.9f * random_float(local_rand_state));
 
-                if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+                if ((center - point3(4.0f, 0.2f, 0.0f)).length() > 0.9f) {
                     material *sphere_material;
 
-                    if (choose_mat < 0.8) {
+                    if (choose_mat < 0.8f) {
                         // diffuse
                         auto albedo = color::random(local_rand_state) * color::random(local_rand_state);
                         sphere_material = new lambertian(albedo);
                         auto center2 = center + vec3(0.0f, random_float(local_rand_state, 0.0f, 0.5f), 0.0f);
-                        d_world[0]->add(new sphere(center, center2, 0.2, sphere_material));
-                    } else if (choose_mat < 0.95) {
+                        d_world[0]->add(new sphere(center, center2, 0.2f, sphere_material));
+                    } else if (choose_mat < 0.95f) {
                         // metal
-                        auto albedo = color::random(local_rand_state, 0.5, 1);
-                        auto fuzz = random_float(local_rand_state, 0, 0.5);
+                        auto albedo = color::random(local_rand_state, 0.5f, 1.0f);
+                        auto fuzz = random_float(local_rand_state, 0.0f, 0.5f);
                         sphere_material = new metal(albedo, fuzz);
-                        d_world[0]->add(new sphere(center, 0.2, sphere_material));
+                        d_world[0]->add(new sphere(center, 0.2f, sphere_material));
                     } else {
                         // glass
-                        sphere_material = new dielectric(1.5);
-                        d_world[0]->add(new sphere(center, 0.2, sphere_material));
+                        sphere_material = new dielectric(1.5f);
+                        d_world[0]->add(new sphere(center, 0.2f, sphere_material));
                     }
                 }
             }
         }
 
-        auto material1 = new dielectric(1.5);
-        d_world[0]->add(new sphere(point3(0, 1, 0), 1.0, material1));
+        auto material1 = new dielectric(1.5f);
+        d_world[0]->add(new sphere(point3(0.0f, 1.0f, 0.0f), 1.0f, material1));
 
-        auto material2 = new lambertian(color(0.4, 0.2, 0.1));
-        d_world[0]->add(new sphere(point3(-4, 1, 0), 1.0, material2));
+        auto material2 = new lambertian(color(0.4f, 0.2f, 0.1f));
+        d_world[0]->add(new sphere(point3(-4.0f, 1.0f, 0.0f), 1.0f, material2));
 
-        auto material3 = new metal(color(0.7, 0.6, 0.5), 0.0);
-        d_world[0]->add(new sphere(point3(4, 1, 0), 1.0, material3));
+        auto material3 = new metal(color(0.7f, 0.6f, 0.5f), 0.0f);
+        d_world[0]->add(new sphere(point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
 
         // bvh
         // TODO:比不添加bvh速度慢。。。
@@ -104,7 +104,7 @@ __global__ void create_world_earth(hittable_list **d_world, unsigned char *image
 
         auto earth_texture = new image_texture(image_texture_data, width, height);
         auto earth_surface = new lambertian(earth_texture);
-        auto globe = new sphere(point3(0.0f, 0.0f, 0.0f), 2, earth_surface);
+        auto globe = new sphere(point3(0.0f, 0.0f, 0.0f), 2.0f, earth_surface);
 
         d_world[0]->add(globe);
     }
@@ -114,7 +114,7 @@ __global__ void create_world_perlin_spheres(hittable_list **d_world, curandState
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         d_world[0] = new hittable_list();
 
-        auto pertext = new noise_texture(4, rand_state[0]);
+        auto pertext = new noise_texture(4.0f, rand_state[0]);
         d_world[0]->add(new sphere(point3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(pertext)));
         d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(pertext)));
     }
@@ -154,7 +154,7 @@ __global__ void create_world_simple_light(hittable_list **d_world, curandState *
         d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(per_text)));
 
         auto diff_light = new diffuse_light(color(4.0f, 4.0f, 4.0f));
-        d_world[0]->add(new sphere(point3(0, 7, 0), 2, diff_light));
+        d_world[0]->add(new sphere(point3(0.0f, 7.0f, 0.0f), 2.0f, diff_light));
         d_world[0]->add(new quad(point3(3.0f, 1.0f, -2.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f),
                                  diff_light));
     }
@@ -164,17 +164,17 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         d_world[0] = new hittable_list();
 
-        auto red = new lambertian(color(.65, .05, .05));
-        auto white = new lambertian(color(.73, .73, .73));
-        auto green = new lambertian(color(.12, .45, .15));
-        auto light = new diffuse_light(color(15, 15, 15));
+        auto red = new lambertian(color(.65f, .05f, .05f));
+        auto white = new lambertian(color(.73f, .73f, .73f));
+        auto green = new lambertian(color(.12f, .45f, .15f));
+        auto light = new diffuse_light(color(15.0f, 15.0f, 15.0f));
 
-        d_world[0]->add(new quad(point3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green));
-        d_world[0]->add(new quad(point3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red));
-        d_world[0]->add(new quad(point3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), light));
-        d_world[0]->add(new quad(point3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white));
-        d_world[0]->add(new quad(point3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white));
-        d_world[0]->add(new quad(point3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0), white));
+        d_world[0]->add(new quad(point3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), green));
+        d_world[0]->add(new quad(point3(0.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), red));
+        d_world[0]->add(new quad(point3(343.0f, 554.0f, 332.0f), vec3(-130.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -105.0f), light));
+        d_world[0]->add(new quad(point3(0.0f, 0.0f, 0.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), white));
+        d_world[0]->add(new quad(point3(555.0f, 555.0f, 555.0f), vec3(-555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -555.0f), white));
+        d_world[0]->add(new quad(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), white));
     }
 }
 
@@ -186,7 +186,6 @@ __global__ void create_camera(camera **cam, float aspect_ratio, int image_width,
         cam[0] = new camera(aspect_ratio, image_width, samples_per_pixel, max_depth, background, vfov, lookfrom, lookat,
                             vup,
                             defocus_angle, focus_dist);
-        // printf("%d %f\n", cam[0]->samples_per_pixel, cam[0]->get_pixel_samples_scale());
     }
 }
 
@@ -331,7 +330,7 @@ int main() {
     // Image / Camera params
     float aspect_ratio = 16.0f / 9.0f, vfov = 20.0f, defocus_angle = 0.0f, focus_dist = 10.0f;
     int image_width = 1920, samples_per_pixel = 500, max_depth = 50;
-    point3 lookfrom, lookat;
+    point3 lookfrom, lookat = point3(0.0f, 0.0f, 0.0f);;
     vec3 vup = vec3(0.0f, 1.0f, 0.0f);
     color background = color(0.7f, 0.8f, 1.0f);
 
@@ -343,31 +342,27 @@ int main() {
             image_width = 400;
             samples_per_pixel = 50;
 
-            lookfrom = point3(13, 2, 3);
-            lookat = point3(0, 0, -1);
+            lookfrom = point3(13.0f, 2.0f, 3.0f);
+            lookat = point3(0.0f, 0.0f, -1.0f);
 
             defocus_angle = 0.6f;
             break;
         case 2:
-            lookfrom = point3(13, 2, 3);
-            lookat = point3(0, 0, 0);
+            lookfrom = point3(13.0f, 2.0f, 3.0f);
 
             defocus_angle = 0.06f;
             break;
         case 3:
-            lookfrom = point3(0, 0, 12);
-            lookat = point3(0, 0, 0);
+            lookfrom = point3(0.0f, 0.0f, 12.0f);
             break;
         case 4:
-            lookfrom = point3(13, 2, 3);
-            lookat = point3(0, 0, 0);
+            lookfrom = point3(13.0f, 2.0f, 3.0f);
             break;
         case 5:
             aspect_ratio = 1.0f;
 
             vfov = 80.0f;
-            lookfrom = point3(0, 0, 9);
-            lookat = point3(0, 0, 0);
+            lookfrom = point3(0.0f, 0.0f, 9.0f);
             break;
         case 6:
             background = color(0.0f, 0.0f, 0.0f);
@@ -381,8 +376,8 @@ int main() {
             background = color(0.0f, 0.0f, 0.0f);
 
             vfov = 40.0f;
-            lookfrom = point3(278, 278, -800);
-            lookat = point3(278, 278, 0);
+            lookfrom = point3(278.0f, 278.0f, -800.0f);
+            lookat = point3(278.0f, 278.0f, 0.0f);
             break;
     }
     process(choice, aspect_ratio, image_width, samples_per_pixel, max_depth, background, vfov, lookfrom, lookat, vup,

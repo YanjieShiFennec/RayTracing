@@ -7,9 +7,9 @@
 using color = vec3;
 
 __device__ inline float linear_to_gamma(float linear_component) {
-    if (linear_component > 0)
+    if (linear_component > 0.0f)
         return sqrtf(linear_component);
-    return 0;
+    return 0.0f;
 }
 
 __device__ void write_color(unsigned char *data, const color &pixel_color) {
