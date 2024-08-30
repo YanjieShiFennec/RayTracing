@@ -27,6 +27,7 @@ private:
     color albedo;
 };
 
+// 棋盘纹理
 class checker_texture : public texture {
 public:
     __device__ checker_texture(float scale, texture *even, texture *odd) : inv_scale(1.0f / scale),
@@ -53,6 +54,7 @@ private:
     texture *odd;
 };
 
+// 图片纹理
 class image_texture : public texture {
 public:
     __device__ image_texture(unsigned char *data, int width, int height) : data(data), width(width), height(height) {
@@ -82,6 +84,7 @@ private:
     int width, height;
 };
 
+// 柏林噪声纹理
 class noise_texture : public texture {
 public:
     __device__ noise_texture(float scale, curandState &rand_state) : scale(scale), noise(perlin(rand_state)) {

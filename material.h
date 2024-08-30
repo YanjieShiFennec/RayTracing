@@ -11,6 +11,11 @@ public:
                                     curandState &rand_state) const {
         return false;
     }
+
+    __device__ virtual color emitted(float u, float v, const point3 &p) const {
+        // 非发光体默认返回黑色
+        return color(0, 0, 0);
+    }
 };
 
 // 漫反射材质
@@ -105,4 +110,22 @@ private:
         return r0 + (1.0f - r0) * powf((1.0f - cosine), 5.0f);
     }
 };
+
+// 发光体
+class diffuse_light : public material {
+public:
+    __device__ diffuse_light(texture *tex): tex(tex) {
+    }
+
+    __device__ diffuse_light(const color &emit): tex(new solid_color(emit)) {
+    }
+
+    __device__ color emitted(float u, float v, const point3 &p) const override {
+        return tex->value(u, v, p);
+    }
+
+private:
+    texture *tex;
+};
+
 #endif // MATERIAL_H

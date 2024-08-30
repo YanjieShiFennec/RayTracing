@@ -11,6 +11,7 @@ public:
     int image_width = 100; // Rendered image width in pixel count
     int samples_per_pixel = 10; // Count of random samples for each pixel
     int max_depth = 10; // Maximum number of ray bounces into scene
+    color background; // Scene background color
 
     // 镜头设置参数
     float vfov = 90.0f; // Vertical view angle (field of view) 垂直可视角度
@@ -23,34 +24,46 @@ public:
     float focus_dist = 10.0f; // Distance from camera lookfrom point to plane of perfect focus
 
     __device__ camera(float aspect_ratio, int image_width, int samples_per_pixel,
-                      int max_depth, float vfov, point3 lookfrom, point3 lookat, vec3 vup, float defocus_angle,
+                      int max_depth, color background, float vfov, point3 lookfrom, point3 lookat, vec3 vup,
+                      float defocus_angle,
                       float focus_dist): aspect_ratio(aspect_ratio),
                                          image_width(image_width), samples_per_pixel(samples_per_pixel),
-                                         max_depth(max_depth), vfov(vfov), lookfrom(lookfrom), lookat(lookat),
+                                         max_depth(max_depth), background(background), vfov(vfov), lookfrom(lookfrom),
+                                         lookat(lookat),
                                          vup(vup), defocus_angle(defocus_angle), focus_dist(focus_dist) {
         initialize();
     }
 
-    __device__ void render(unsigned char *data, hittable_list **d_world, curandState *rand_state, int index_x,
+    __device__ void render(unsigned char *data, hittable_list **d_world, color *d_color_stack, curandState *rand_state,
+                           int index_x,
                            int index_y, int stride_x, int stride_y) {
         for (int j = index_y; j < image_height; j += stride_y) {
             for (int i = index_x; i < image_width; i += stride_x) {
-                int pixel_index = channels * (j * image_width + i);
+                int index = (j * image_width + i);
+                int pixel_index = channels * index;
+                int color_stack_index = max_depth * index * 2;
+
                 color pixel_color(0, 0, 0);
                 curandState local_rand_state = rand_state[pixel_index / channels];
 
                 for (int sample = 0; sample < samples_per_pixel; sample++) {
                     ray r = get_ray(i, j, local_rand_state);
-                    pixel_color += ray_color(r, max_depth, d_world, local_rand_state);
+                    pixel_color += ray_color(r, max_depth, d_world, &d_color_stack[color_stack_index],
+                                             local_rand_state);
                 }
-                write_color(data, pixel_index, pixel_color * pixel_samples_scale);
+                write_color(&data[pixel_index], pixel_color * pixel_samples_scale);
             }
         }
     }
 
-    __device__ color ray_color(const ray &r, int depth, hittable_list **d_world, curandState &rand_state) {
+    __device__ color ray_color(const ray &r, int depth, hittable_list **d_world, color *d_color_stack,
+                               curandState &rand_state) {
+        // d_color_stack[0, depth - 1] 表示 attenuation_stack
+        // d_color_stack[depth, 2 * depth - 1] 表示 emission_stack
+
         ray cur_ray = r;
-        color cur_attenuation = color(1.0, 1.0, 1.0);
+        int index = depth - 1;
+
         // 击中球面的光线，模拟哑光材料漫反射
         for (int i = 0; i < depth; i++) {
             hit_record rec;
@@ -58,13 +71,19 @@ public:
             if (d_world[0]->hit(cur_ray, interval(0.001f, infinity), rec)) {
                 ray scattered;
                 color attenuation;
+                color color_from_emission = rec.mat->emitted(rec.u, rec.v, rec.p);
+
+                d_color_stack[depth + i] = color_from_emission;
                 if (rec.mat->scatter(cur_ray, rec, attenuation, scattered, rand_state)) {
-                    cur_attenuation = cur_attenuation * attenuation;
+                    d_color_stack[i] = attenuation;
                     cur_ray = scattered;
                 } else {
-                    return color(0, 0, 0);
+                    d_color_stack[i] = color(0, 0, 0);
+                    index = i;
+                    break;
                 }
             } else {
+                /*
                 // 没有击中球面的光线，可理解为背景颜色，颜色根据高度 y 线性渐变
                 // -1.0 < y < 1.0
                 vec3 unit_direction = unit_vector(r.direction());
@@ -73,10 +92,21 @@ public:
                 // 线性渐变
                 vec3 c = (1.0f - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0);
                 return cur_attenuation * c;
+                */
+
+                // If the ray hits nothing, return the background color.
+                d_color_stack[i] = background;
+                d_color_stack[depth + i] = color(0, 0, 0);
+                index = i;
+                break;
             }
         }
-        // If we've exceeded the ray bounce limit, no more light is gathered.
-        return color(0, 0, 0);
+
+        color result = color(1, 1, 1);
+        for (int i = index; i >= 0; i--)
+            result = result * d_color_stack[i] + d_color_stack[depth + i];
+
+        return result;
     }
 
     __device__ vec3 sample_square(curandState &local_rand_state) {

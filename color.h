@@ -12,7 +12,7 @@ __device__ inline float linear_to_gamma(float linear_component) {
     return 0;
 }
 
-__device__ void write_color(unsigned char *data, int pixel_index, const color &pixel_color) {
+__device__ void write_color(unsigned char *data, const color &pixel_color) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();
     auto b = pixel_color.z();
@@ -24,9 +24,9 @@ __device__ void write_color(unsigned char *data, int pixel_index, const color &p
 
     // Translate the [0, 1] component values to the byte range [0, 255].
     const interval intensity(0.000f, 0.999f);
-    data[pixel_index] = int(256 * intensity.clamp(r));
-    data[pixel_index + 1] = int(256 * intensity.clamp(g));
-    data[pixel_index + 2] = int(256 * intensity.clamp(b));
+    data[0] = int(256 * intensity.clamp(r));
+    data[1] = int(256 * intensity.clamp(g));
+    data[2] = int(256 * intensity.clamp(b));
 }
 
 #endif // COLOR_H
