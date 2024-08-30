@@ -154,6 +154,7 @@ __global__ void create_world_simple_light(hittable_list **d_world, curandState *
         d_world[0]->add(new sphere(point3(0.0f, 2.0f, 0.0f), 2.0f, new lambertian(per_text)));
 
         auto diff_light = new diffuse_light(color(4.0f, 4.0f, 4.0f));
+       d_world[0]->add(new sphere(point3(0,7,0), 2, diff_light));
         d_world[0]->add(new quad(point3(3.0f, 1.0f, -2.0f), vec3(2.0f, 0.0f, 0.0f), vec3(0.0f, 2.0f, 0.0f),
                                  diff_light));
     }
