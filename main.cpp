@@ -251,8 +251,43 @@ void simple_light() {
     cam.render(world, file_name);
 }
 
+void cornell_box() {
+    hittable_list world;
+
+    auto red = make_shared<lambertian>(color(0.65f, 0.05f, 0.05f));
+    auto white = make_shared<lambertian>(color(0.73, 0.73, 0.73));
+    auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
+    auto light = make_shared<diffuse_light>(color(15.0f, 15.0f, 15.0f));
+
+    world.add(make_shared<quad>(point3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), green));
+    world.add(make_shared<quad>(point3(0.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), red));
+    world.add(make_shared<quad>(point3(343.0f, 554.0f, 332.0f), vec3(-130.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -105.0f),
+                                light));
+    world.add(make_shared<quad>(point3(0.0f, 0.0f, 0.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), white));
+    world.add(make_shared<quad>(point3(555.0f, 555.0f, 555.0f), vec3(-555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -555.0f), white));
+    world.add(make_shared<quad>(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), white));
+
+    camera cam;
+
+    cam.aspect_ratio = 1.0f;
+    cam.image_width = 600;
+    cam.samples_per_pixel = 200;
+    cam.max_depth = 50;
+    cam.background = color(0.0f, 0.0f, 0.0f);
+
+    cam.vfov = 40.0f;
+    cam.lookfrom = point3(278.0f, 278.0f, -800.0f);
+    cam.lookat = point3(278.0f, 278.0f, 0.0f);
+    cam.vup = vec3(0.0f, 1.0f, 0.0f);
+
+    cam.defocus_angle = 0.0f;
+
+    char file_name[] = "../RayTracing.png";
+    cam.render(world, file_name);
+}
+
 int main() {
-    switch (6) {
+    switch (7) {
         case 1:
             bouncing_spheres();
             break;
@@ -270,6 +305,9 @@ int main() {
             break;
         case 6:
             simple_light();
+            break;
+        case 7:
+            cornell_box();
             break;
     }
 }
