@@ -32,7 +32,7 @@ __device__ void bubble_sort(hittable **h, size_t start, size_t end, int index) {
 class bvh_node : public hittable {
 public:
     __device__ bvh_node(hittable_list **list): bvh_node(
-        list[0]->objects, 0, list[0]->size) {
+        list[0]->objects, 0, list[0]->list_size) {
         // There's a C++ subtlety here. This constructor (without span indices) creates an
         // implicit copy of the hittable list, which we will modify. The lifetime of the copied
         // list only extends until this constructor exits. That's OK, because we only need to

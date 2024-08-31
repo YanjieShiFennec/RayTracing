@@ -169,12 +169,20 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
         auto green = new lambertian(color(.12f, .45f, .15f));
         auto light = new diffuse_light(color(15.0f, 15.0f, 15.0f));
 
-        d_world[0]->add(new quad(point3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), green));
+        d_world[0]->add(new quad(point3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f),
+                                 green));
         d_world[0]->add(new quad(point3(0.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), red));
-        d_world[0]->add(new quad(point3(343.0f, 554.0f, 332.0f), vec3(-130.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -105.0f), light));
+        d_world[0]->add(new quad(point3(343.0f, 554.0f, 332.0f), vec3(-130.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -105.0f),
+                                 light));
         d_world[0]->add(new quad(point3(0.0f, 0.0f, 0.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 555.0f), white));
-        d_world[0]->add(new quad(point3(555.0f, 555.0f, 555.0f), vec3(-555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -555.0f), white));
-        d_world[0]->add(new quad(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), white));
+        d_world[0]->add(new quad(point3(555.0f, 555.0f, 555.0f), vec3(-555.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -555.0f),
+                                 white));
+        d_world[0]->add(new quad(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f),
+                                 white));
+
+        // two blocks
+        add_box(d_world[0], point3(130.0f, 0.0f, 65.0f), point3(295.0f, 165.0f, 230.0f), white);
+        add_box(d_world[0], point3(265.0f, 0.0f, 295.0f), point3(430.0f, 330.0f, 460.0f), white);
     }
 }
 
@@ -337,8 +345,6 @@ int main() {
     int choice = 7;
     switch (choice) {
         case 1:
-            // image_width = 1920;
-            // samples_per_pixel = 500;
             image_width = 400;
             samples_per_pixel = 50;
 

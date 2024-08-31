@@ -4,11 +4,12 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
+#include "hittable_list.h"
 
 class quad : public hittable {
 public:
-     __device__ quad(const point3 &Q, const point3 &u, const point3 &v, material *mat)
-            : Q(Q), u(u), v(v), mat(mat) {
+    __device__ quad(const point3 &Q, const point3 &u, const point3 &v, material *mat)
+        : Q(Q), u(u), v(v), mat(mat) {
         // 平面方程：Ax + By + Cz = D，需要确定四个系数 A, B, C, D
         // 令 normal 为 (A, B, C)，代表平面法线，由两个边向量 u, v 叉乘得出
         auto n = cross(u, v);
@@ -21,14 +22,14 @@ public:
         set_bounding_box();
     }
 
-     __device__ virtual void set_bounding_box() {
+    __device__ virtual void set_bounding_box() {
         // Compute the bounding box of all four vertices.
         auto bbox_diagonal1 = aabb(Q, Q + u + v);
         auto bbox_diagonal2 = aabb(Q + u, Q + v);
         bbox = aabb(bbox_diagonal1, bbox_diagonal2);
     }
 
-     __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
+    __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
         /*
         * 由 ray.h 中的 R(t) = P + td 和 normal · Q = D
         * 得 n · (P + td) = D，求解 t，即交点
@@ -76,7 +77,7 @@ public:
         return true;
     }
 
-     __device__ virtual bool is_interior(float a, float b, hit_record &rec) const {
+    __device__ virtual bool is_interior(float a, float b, hit_record &rec) const {
         interval unit_interval = interval(0, 1);
         // Given the hit point in plane coordinates, return false if it is outside the
         // primitive, otherwise set the hit record UV coordinates and return true.
@@ -89,15 +90,15 @@ public:
         return true;
     }
 
-     __device__ aabb bounding_box() const override { return bbox; }
+    __device__ aabb bounding_box() const override { return bbox; }
 
-     __device__ void print() const override {
+    __device__ void print() const override {
         printf("%f %f %f\n", bbox.x.min, bbox.y.min, bbox.z.min);
     }
 
     __device__ hittable *get_left_child() const override {
-         return nullptr;
-     }
+        return nullptr;
+    }
 
     __device__ hittable *get_right_child() const override {
         return nullptr;
@@ -115,4 +116,21 @@ private:
     float D;
 };
 
+// Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+__device__ inline void add_box(hittable_list *list, const point3 &a, const point3 &b, material *mat) {
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
+    auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
+
+    auto dx = vec3(max.x() - min.x(), 0.0f, 0.0f);
+    auto dy = vec3(0.0f, max.y() - min.y(), 0.0f);
+    auto dz = vec3(0.0f, 0.0f, max.z() - min.z());
+
+    list->add(new quad(point3(min.x(), min.y(), max.z()), dx, dy, mat)); // front
+    list->add(new quad(point3(max.x(), min.y(), max.z()), -dz, dy, mat)); // right
+    list->add(new quad(point3(max.x(), min.y(), min.z()), -dx, dy, mat)); // back
+    list->add(new quad(point3(min.x(), min.y(), min.z()), dz, dy, mat)); // left
+    list->add(new quad(point3(min.x(), max.y(), max.z()), dx, -dz, mat)); // top
+    list->add(new quad(point3(min.x(), min.y(), min.z()), dx, dz, mat)); // bottom
+}
 #endif // QUAD_H
