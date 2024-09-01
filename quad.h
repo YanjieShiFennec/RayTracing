@@ -96,14 +96,6 @@ public:
         printf("%f %f %f\n", bbox.x.min, bbox.y.min, bbox.z.min);
     }
 
-    __device__ hittable *get_left_child() const override {
-        return nullptr;
-    }
-
-    __device__ hittable *get_right_child() const override {
-        return nullptr;
-    }
-
 private:
     // 平行四边形四个顶点分别为 Q, Q + v, Q + u, Q + u + v
     point3 Q; // 基点

@@ -37,9 +37,13 @@ public:
 
     __device__ virtual void print() const = 0;
 
-    __device__ virtual hittable *get_left_child() const = 0;
+    __device__ virtual hittable *get_left_child() const {
+        return nullptr;
+    }
 
-    __device__ virtual hittable *get_right_child() const = 0;
+    __device__ virtual hittable *get_right_child() const {
+        return nullptr;
+    }
 };
 
 #endif // HITTABLE_H

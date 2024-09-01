@@ -81,14 +81,6 @@ public:
         printf("%f %f %f\n", bbox.x.min, bbox.y.min, bbox.z.min);
     }
 
-    __device__ hittable *get_left_child() const override {
-        return nullptr;
-    }
-
-    __device__ hittable *get_right_child() const override {
-        return nullptr;
-    }
-
 private:
     point3 center1;
     float radius;
