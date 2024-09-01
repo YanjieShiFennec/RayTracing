@@ -4,11 +4,12 @@
 #include "rt_constants.h"
 
 #include "hittable.h"
+#include "hittable_list.h"
 
 class quad : public hittable {
 public:
     quad(const point3 &Q, const point3 &u, const point3 &v, shared_ptr<material> mat)
-            : Q(Q), u(u), v(v), mat(mat) {
+        : Q(Q), u(u), v(v), mat(mat) {
         // 平面方程：Ax + By + Cz = D，需要确定四个系数 A, B, C, D
         // 令 normal 为 (A, B, C)，代表平面法线，由两个边向量 u, v 叉乘得出
         auto n = cross(u, v);
@@ -114,5 +115,28 @@ private:
     vec3 normal; // 平面法线
     float D;
 };
+
+inline shared_ptr<hittable_list> box(const point3 &a, const point3 &b, shared_ptr<material> mat) {
+    // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+
+    auto sides = make_shared<hittable_list>();
+
+    // Construct the two opposite vertices with the minimum and maximum coordinates.
+    auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
+    auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
+
+    auto dx = vec3(max.x() - min.x(), 0.0f, 0.0f);
+    auto dy = vec3(0.0f, max.y() - min.y(), 0.0f);
+    auto dz = vec3(0.0f, 0.0f, max.z() - min.z());
+
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), max.z()), dx, dy, mat)); // front
+    sides->add(make_shared<quad>(point3(max.x(), min.y(), max.z()), -dz, dy, mat)); // right
+    sides->add(make_shared<quad>(point3(max.x(), min.y(), min.z()), -dx, dy, mat)); // back
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), min.z()), dz, dy, mat)); // left
+    sides->add(make_shared<quad>(point3(min.x(), max.y(), max.z()), dx, -dz, mat)); // top
+    sides->add(make_shared<quad>(point3(min.x(), min.y(), min.z()), dx, dz, mat)); // bottom
+
+    return sides;
+}
 
 #endif // QUAD_H
