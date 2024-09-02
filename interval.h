@@ -8,7 +8,8 @@ public:
 
     interval() : min(+infinity), max(-infinity) {} // Default interval is empty
     interval(float min, float max) : min(min), max(max) {}
-    interval(const interval& a, const interval& b) {
+
+    interval(const interval &a, const interval &b) {
         // Create the interval tightly enclosing the two input intervals.
         min = a.min <= b.min ? a.min : b.min;
         max = a.max >= b.max ? a.max : b.max;
@@ -42,5 +43,13 @@ public:
 
 const interval interval::empty = interval(+infinity, -infinity);
 const interval interval::universe = interval(-infinity, +infinity);
+
+interval operator+(const interval &ival, float displacement) {
+    return interval(ival.min + displacement, ival.max + displacement);
+}
+
+interval operator+(float displacement, const interval &ival) {
+    return ival + displacement;
+}
 
 #endif // INTERVAL_H
