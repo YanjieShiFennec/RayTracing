@@ -79,14 +79,6 @@ public:
         std::cout << bbox.x.min << " " << bbox.y.min << " " << bbox.z.min << std::endl;
     }
 
-    shared_ptr<hittable> get_left_child() const override {
-        return NULL;
-    };
-
-    shared_ptr<hittable> get_right_child() const override {
-        return NULL;
-    };
-
 private:
     point3 center1;
     float radius;

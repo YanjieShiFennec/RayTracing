@@ -37,9 +37,13 @@ public:
 
     virtual void print() const = 0;
 
-    virtual shared_ptr<hittable> get_left_child() const = 0;
+    virtual shared_ptr<hittable> get_left_child() const {
+        return nullptr;
+    }
 
-    virtual shared_ptr<hittable> get_right_child() const = 0;
+    virtual shared_ptr<hittable> get_right_child() const {
+        return nullptr;
+    }
 };
 
 #endif // HITTABLE_H

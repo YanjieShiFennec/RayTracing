@@ -12,10 +12,6 @@
 // cmake-build-debug/RayTracing > image.ppm
 
 void bouncing_spheres() {
-    // 计时
-    clock_t start, end;
-
-    start = clock();
     // 设置球体
     hittable_list world;
 
@@ -78,9 +74,6 @@ void bouncing_spheres() {
     // world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, material_bubble));
     // world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
 
-    end = clock();
-    cout << "Create took " << double(end - start) / CLOCKS_PER_SEC << " seconds" << std::endl;
-
     camera cam;
 
     cam.aspect_ratio = 16.0f / 9.0f;
@@ -97,14 +90,8 @@ void bouncing_spheres() {
     cam.defocus_angle = 0.6f;
     cam.focus_dist = 10.0f;
 
-    // 渲染计时
-    start = clock();
-
     char file_name[] = "../RayTracing.png";
     cam.render(world, file_name);
-
-    end = clock();
-    cout << "Render took " << double(end - start) / CLOCKS_PER_SEC << " seconds" << std::endl;
 }
 
 void checkered_spheres() {

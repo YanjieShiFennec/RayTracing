@@ -45,16 +45,8 @@ public:
     aabb bounding_box() const override { return bbox; }
     void print() const override{
         for (const auto &object: objects){
-            object->print(); // sphere
+            object->print();
         }
-    };
-
-    shared_ptr<hittable> get_left_child() const override {
-        return nullptr;
-    };
-
-    shared_ptr<hittable> get_right_child() const override {
-        return nullptr;
     };
 
 private:
