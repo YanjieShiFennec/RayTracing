@@ -110,7 +110,6 @@ private:
 
 inline shared_ptr<hittable_list> box(const point3 &a, const point3 &b, shared_ptr<material> mat) {
     // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
-
     auto sides = make_shared<hittable_list>();
 
     // Construct the two opposite vertices with the minimum and maximum coordinates.

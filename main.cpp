@@ -257,22 +257,12 @@ void cornell_box() {
     world.add(make_shared<quad>(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), white));
 
     // two blocks
-    // auto b = box(point3(130.0f, 0.0f, 65.0f), point3(295.0f, 165.0f, 230.0f), white);
-    // for (int i = 0; i < 6; i++)
-    //     world.add(b->objects[i]);
-    // b = box(point3(265.0f, 0.0f, 295.0f), point3(430.0f, 330.0f, 460.0f), white);
-    // for (int i = 0; i < 6; i++)
-    //     world.add(b->objects[i]);
-
-    // world.add(box(point3(130.0f, 0.0f, 65.0f), point3(295.0f, 165.0f, 230.0f), white));
-    // world.add(box(point3(265.0f, 0.0f, 295.0f), point3(430.0f, 330.0f, 460.0f), white));
-
-    shared_ptr<hittable> box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
-    box1 = make_shared<rotate_y>(box1, 15.0f);
+    shared_ptr <hittable> box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
+    box1 = make_shared<rotate>(box1, 15.0f, 15.0f, 15.0f);
     box1 = make_shared<translate>(box1, vec3(265.0f, 0.0f, 295.0f));
     world.add(box1);
 
-    shared_ptr<hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+    shared_ptr <hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
     box2 = make_shared<rotate_y>(box2, -18.0f);
     box2 = make_shared<translate>(box2, vec3(130.0f, 0.0f, 65.0f));
     world.add(box2);
@@ -281,7 +271,7 @@ void cornell_box() {
 
     cam.aspect_ratio = 1.0f;
     cam.image_width = 600;
-    cam.samples_per_pixel = 200;
+    cam.samples_per_pixel = 10;
     cam.max_depth = 50;
     cam.background = color(0.0f, 0.0f, 0.0f);
 
