@@ -19,7 +19,7 @@
 __global__ void render(unsigned char *data, camera **cam, hittable_list **d_world, color *d_color_stack,
                        curandState *rand_state) {
     // CUDA 参数
-    // blockId: 块索引, blockDim: 块内的线程数量, threadId: 线程索引, gridDim: 网格内的块数量.
+    // blockId: 块索引, blockDim: 块内的线程数量(tx, ty), threadId: 线程索引, gridDim: 网格内的块数量((image_width + tx - 1) / tx, (image_height + ty - 1) / ty).
     int index_x = blockIdx.x * blockDim.x + threadIdx.x;
     int index_y = blockIdx.y * blockDim.y + threadIdx.y;
     int stride_x = blockDim.x * gridDim.x;
@@ -181,8 +181,15 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
                                  white));
 
         // two blocks
-        add_box(d_world[0], point3(130.0f, 0.0f, 65.0f), point3(295.0f, 165.0f, 230.0f), white);
-        add_box(d_world[0], point3(265.0f, 0.0f, 295.0f), point3(430.0f, 330.0f, 460.0f), white);
+        hittable *box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
+        box1 = new rotate_y(box1, 15.0f);
+        box1 = new translate(box1, vec3(265.0f, 0.0f, 295.0f));
+        d_world[0]->add(box1);
+
+        hittable *box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+        box2 = new rotate_y(box2, -18.0f);
+        box2 = new translate(box2, vec3(130.0f, 0.0f, 65.0f));
+        d_world[0]->add(box2);
     }
 }
 
@@ -230,9 +237,12 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
     checkCudaErrors(cudaDeviceSynchronize());
 
     // CUDA Thread
-    int tx = 8; // 线程数量，对应 image_width
-    int ty = 8; // 线程数量，对应 image_height
-    dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
+    int tx = 20; // 线程数量，对应 image_width，视硬件性能而定
+    int ty = 20; // 线程数量，对应 image_height，视硬件性能而定
+
+    int grid_dim_x = (image_width + tx - 1) / tx;
+    int grid_dim_y = (image_height + ty - 1) / ty;
+    dim3 blocks(grid_dim_x, grid_dim_y);
     dim3 threads(tx, ty);
 
     // Random
@@ -246,6 +256,7 @@ void process(int choice, float aspect_ratio, int image_width, int samples_per_pi
     // Color stack
     color *d_color_stack;
     checkCudaErrors(cudaMalloc(&d_color_stack, image_width*image_height*sizeof(color)*max_depth*2));
+    // checkCudaErrors(cudaMalloc(&d_color_stack, grid_dim_x*grid_dim_y*sizeof(color)*max_depth*2));
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 

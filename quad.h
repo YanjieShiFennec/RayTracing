@@ -108,8 +108,10 @@ private:
     float D;
 };
 
-// Returns the 3D box (six sides) that contains the two opposite vertices a & b.
-__device__ inline void add_box(hittable_list *list, const point3 &a, const point3 &b, material *mat) {
+__device__ inline hittable_list *box(const point3 &a, const point3 &b, material *mat) {
+    // Returns the 3D box (six sides) that contains the two opposite vertices a & b.
+    auto sides = new hittable_list();
+
     // Construct the two opposite vertices with the minimum and maximum coordinates.
     auto min = point3(std::fmin(a.x(), b.x()), std::fmin(a.y(), b.y()), std::fmin(a.z(), b.z()));
     auto max = point3(std::fmax(a.x(), b.x()), std::fmax(a.y(), b.y()), std::fmax(a.z(), b.z()));
@@ -118,11 +120,13 @@ __device__ inline void add_box(hittable_list *list, const point3 &a, const point
     auto dy = vec3(0.0f, max.y() - min.y(), 0.0f);
     auto dz = vec3(0.0f, 0.0f, max.z() - min.z());
 
-    list->add(new quad(point3(min.x(), min.y(), max.z()), dx, dy, mat)); // front
-    list->add(new quad(point3(max.x(), min.y(), max.z()), -dz, dy, mat)); // right
-    list->add(new quad(point3(max.x(), min.y(), min.z()), -dx, dy, mat)); // back
-    list->add(new quad(point3(min.x(), min.y(), min.z()), dz, dy, mat)); // left
-    list->add(new quad(point3(min.x(), max.y(), max.z()), dx, -dz, mat)); // top
-    list->add(new quad(point3(min.x(), min.y(), min.z()), dx, dz, mat)); // bottom
+    sides->add(new quad(point3(min.x(), min.y(), max.z()), dx, dy, mat)); // front
+    sides->add(new quad(point3(max.x(), min.y(), max.z()), -dz, dy, mat)); // right
+    sides->add(new quad(point3(max.x(), min.y(), min.z()), -dx, dy, mat)); // back
+    sides->add(new quad(point3(min.x(), min.y(), min.z()), dz, dy, mat)); // left
+    sides->add(new quad(point3(min.x(), max.y(), max.z()), dx, -dz, mat)); // top
+    sides->add(new quad(point3(min.x(), min.y(), min.z()), dx, dz, mat)); // bottom
+
+    return sides;
 }
 #endif // QUAD_H

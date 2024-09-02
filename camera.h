@@ -42,6 +42,9 @@ public:
                 int index = (j * image_width + i);
                 int pixel_index = channels * index;
                 int color_stack_index = max_depth * index * 2;
+                // int pixel_index = (j * image_width + i) * channels;
+                // int color_stack_index = ((blockIdx.x + 1) * (blockIdx.y + 1) - 1) * max_depth * 2;
+
 
                 color pixel_color(0.0f, 0.0f, 0.0f);
                 curandState local_rand_state = rand_state[pixel_index / channels];
