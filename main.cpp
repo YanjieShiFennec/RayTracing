@@ -181,12 +181,12 @@ void quads() {
     // Quads
     world.add(make_shared<quad>(point3(-3.0f, -2.0f, 5.0f), vec3(0.0f, 0.0f, -4.0f), vec3(0.0f, 4.0f, 0.0f), left_red));
     world.add(
-            make_shared<quad>(point3(-2.0f, -2.0f, 0.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 4.0f, 0.0f), back_green));
+        make_shared<quad>(point3(-2.0f, -2.0f, 0.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 4.0f, 0.0f), back_green));
     world.add(make_shared<quad>(point3(3.0f, -2.0f, 1.0f), vec3(0.0f, 0.0f, 4.0f), vec3(0.0f, 4.0f, 0.0f), right_blue));
     world.add(
-            make_shared<quad>(point3(-2.0f, 3.0f, 1.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 4.0f), upper_orange));
+        make_shared<quad>(point3(-2.0f, 3.0f, 1.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 4.0f), upper_orange));
     world.add(
-            make_shared<quad>(point3(-2.0f, -3.0f, 5.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -4.0f), lower_teal));
+        make_shared<quad>(point3(-2.0f, -3.0f, 5.0f), vec3(4.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, -4.0f), lower_teal));
 
     camera cam;
 
@@ -257,13 +257,13 @@ void cornell_box() {
     world.add(make_shared<quad>(point3(0.0f, 0.0f, 555.0f), vec3(555.0f, 0.0f, 0.0f), vec3(0.0f, 555.0f, 0.0f), white));
 
     // two blocks
-    shared_ptr <hittable> box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
-    box1 = make_shared<rotate>(box1, 15.0f, 15.0f, 15.0f);
+    shared_ptr<hittable> box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
+    box1 = make_shared<rotate>(box1, 0.0f, 15.0f, 0.0f);
     box1 = make_shared<translate>(box1, vec3(265.0f, 0.0f, 295.0f));
     world.add(box1);
 
-    shared_ptr <hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
-    box2 = make_shared<rotate_y>(box2, -18.0f);
+    shared_ptr<hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+    box2 = make_shared<rotate>(box2, 0.0f, -18.0f, 0.0f);
     box2 = make_shared<translate>(box2, vec3(130.0f, 0.0f, 65.0f));
     world.add(box2);
 

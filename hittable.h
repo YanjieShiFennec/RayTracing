@@ -35,7 +35,8 @@ public:
 
     virtual aabb bounding_box() const = 0;
 
-    virtual void print() const {};
+    virtual void print() const {
+    };
 
     virtual shared_ptr<hittable> get_left_child() const {
         return nullptr;
@@ -77,7 +78,6 @@ private:
     aabb bbox;
 };
 
-// 绕 Y 轴逆时针旋转 θ
 /*
  * 点 (x, y, z) 绕 Z 轴旋转时，z 不变，只需求 (x', y')
  * 假设逆时针旋转 θ，(x, y) 与 x 轴夹角为 α，则 (x', y') 与 x 轴夹角为 θ + α
@@ -96,6 +96,7 @@ private:
  * 得 y' = cos(θ)y - sin(θ)z，
  *    z' = sin(θ)y + cos(θ)z
  */
+// 绕 Y 轴逆时针旋转 θ
 class rotate_y : public hittable {
 public:
     rotate_y(shared_ptr<hittable> object, float angle) : object(object) {
@@ -118,11 +119,7 @@ public:
 
                     // 算出当前顶点的新的 x, z 坐标值
                     // bbox 逆时针旋转 θ
-                    auto newx = cos_theta * x + sin_theta * z;
-                    auto newz = -sin_theta * x + cos_theta * z;
-
-                    vec3 tester(newx, y, newz);
-
+                    vec3 tester = rotate_vec_counter_clockwise(vec3(x, y, z));
                     for (int c = 0; c < 3; c++) {
                         min[c] = std::fminf(min[c], tester[c]);
                         max[c] = std::fmaxf(min[c], tester[c]);
@@ -135,15 +132,9 @@ public:
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
         // Transform the ray from world space to object space
-        // 光线逆时针旋转 -θ
-        auto origin = point3(cos_theta * r.origin().x() - sin_theta * r.origin().z(),
-                             r.origin().y(),
-                             sin_theta * r.origin().x() + cos_theta * r.origin().z());
-
-        auto direction = vec3(cos_theta * r.direction().x() - sin_theta * r.direction().z(),
-                              r.direction().y(),
-                              sin_theta * r.direction().x() + cos_theta * r.direction().z());
-
+        // 光线顺时针旋转 θ
+        point3 origin = rotate_vec_clockwise(r.origin());
+        auto direction = rotate_vec_clockwise(r.direction());
         ray rotated_r(origin, direction, r.time());
 
         // Determine whether an intersection exists in objects in object space (and if so, where).
@@ -152,14 +143,9 @@ public:
 
         // Transform the intersection from object space back to world space.
         // 逆时针旋转 θ
-        rec.p = point3(cos_theta * rec.p.x() + sin_theta * rec.p.z(),
-                       rec.p.y(),
-                       -sin_theta * rec.p.x() + cos_theta * rec.p.z());
-
+        rec.p = rotate_vec_counter_clockwise(rec.p);
         // 法线也需要旋转回去
-        rec.normal = vec3(cos_theta * rec.normal.x() + sin_theta * rec.normal.z(),
-                          rec.normal.y(),
-                          -sin_theta * rec.normal.x() + cos_theta * rec.normal.z());
+        rec.normal = rotate_vec_counter_clockwise(rec.normal);
 
         return true;
     }
@@ -171,10 +157,42 @@ private:
     float sin_theta;
     float cos_theta;
     aabb bbox;
+
+    // 逆时针
+    vec3 rotate_vec_counter_clockwise(vec3 v) const {
+        auto vec_x = cos_theta * v.x() + sin_theta * v.z();
+        auto vec_z = -sin_theta * v.x() + cos_theta * v.z();
+        return vec3(vec_x, v.y(), vec_z);
+    }
+
+    // 顺时针
+    vec3 rotate_vec_clockwise(vec3 v) const {
+        auto vec_x = cos_theta * v.x() - sin_theta * v.z();
+        auto vec_z = sin_theta * v.x() + cos_theta * v.z();
+        return vec3(vec_x, v.y(), vec_z);
+    }
 };
 
-// 分别绕 x, y, z 轴旋转α, β, γ 度
+// 分别绕 x, y, z 轴逆时针旋转 α, β, γ 度
 // https://blog.csdn.net/shenquanyue/article/details/103262512
+/*
+ * 首先绕 X 轴逆时针旋转
+ * x' = x
+ * y' = cos(α)y - sin(α)z
+ * z' = sin(α)y + cos(α)z
+ *
+ * 接着绕 Y 轴逆时针旋转
+ * x'' = sin(β)z' + cos(β)x' = sin(β)sin(α)y + sin(β)cos(α)z + cos(β)x
+ * y'' = y' = cos(α)y - sin(α)z
+ * z'' = cos(β)z' - sin(β)x' = cos(β)sin(α)y + cos(β)cos(α)z - sin(β)x
+ *
+ * 最后绕 Z 轴逆时针旋转
+ * x''' = cos(γ)x'' - sin(γ)y'' = cos(γ)sin(β)sin(α)y + cos(γ)sin(β)cos(α)z + cos(γ)cos(β)x - sin(γ)cos(α)y + sin(γ)sin(α)z
+ *                              = cos(β)cos(γ)x + (sin(α)sin(β)cos(γ) - sin(γ)cos(α))y + (sin(β)cos(α)cos(γ) + sin(α)sin(γ))z
+ * y''' = sin(γ)x'' + cos(γ)y'' = sin(γ)sin(β)sin(α)y + sin(γ)sin(β)cos(α)z + sin(γ)cos(β)x + cos(γ)cos(α)y - cos(γ)sin(α)z
+ *                              = sin(γ)cos(β)x + (sin(α)sin(β)sin(γ) + cos(α)cos(γ))y + (sin(β)sin(γ)cos(α) - sin(α)cos(γ))z
+ * z''' = z'' =  - sin(β)x + sin(α)cos(β)y + cos(α)cos(β)z
+ */
 class rotate : public hittable {
 public:
     rotate(shared_ptr<hittable> object, float alpha, float beta, float gamma) : object(object) {
@@ -201,10 +219,9 @@ public:
                     auto y = j * bbox.y.max + (1 - j) * bbox.y.min;
                     auto z = k * bbox.z.max + (1 - k) * bbox.z.min;
 
-                    // 算出当前顶点的新的 x, z 坐标值
+                    // 算出当前顶点的新的 x, y, z 坐标值
                     // bbox 逆时针旋转 θ
-                    vec3 tester = rotate_vec_counter_clockwise(x, y, z);
-
+                    vec3 tester = rotate_vec_counter_clockwise(vec3(x, y, z));
                     for (int c = 0; c < 3; c++) {
                         min[c] = std::fminf(min[c], tester[c]);
                         max[c] = std::fmaxf(min[c], tester[c]);
@@ -217,11 +234,9 @@ public:
 
     bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
         // Transform the ray from world space to object space
-        // 光线逆时针旋转 -θ
-        auto origin = rotate_vec_negative_clockwise(r.origin().x(), r.origin().y(), r.origin().z());
-
-        auto direction = rotate_vec_negative_clockwise(r.direction().x(), r.direction().y(), r.direction().z());
-
+        // 光线顺时针旋转 θ
+        point3 origin = rotate_vec_clockwise(r.origin());
+        auto direction = rotate_vec_clockwise(r.direction());
         ray rotated_r(origin, direction, r.time());
 
         // Determine whether an intersection exists in objects in object space (and if so, where).
@@ -230,10 +245,9 @@ public:
 
         // Transform the intersection from object space back to world space.
         // 逆时针旋转 θ
-        rec.p = rotate_vec_counter_clockwise(rec.p.x(), rec.p.y(), rec.p.z());
-
+        rec.p = rotate_vec_counter_clockwise(rec.p);
         // 法线也需要旋转回去
-        rec.normal = rotate_vec_counter_clockwise(rec.normal.x(), rec.normal.y(), rec.normal.z());
+        rec.normal = rotate_vec_counter_clockwise(rec.normal);
 
         return true;
     }
@@ -250,49 +264,31 @@ private:
     float cos_gamma;
     aabb bbox;
 
-    float rotate_x(float x, float y, float z) {
-        return cos_beta * cos_gamma * x +
-               (sin_alpha * sin_beta * cos_gamma - sin_gamma * cos_alpha) * y +
-               (sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * z;
-    }
-
-    float rotate_y(float x, float y, float z) {
-        return cos_beta * sin_gamma * x +
-               (cos_alpha * cos_gamma + sin_alpha * sin_beta * sin_gamma) * y +
-               (-sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * z;
-    }
-
-    float rotate_z(float x, float y, float z) {
-        return -sin_beta * x +
-               sin_alpha * cos_beta * y +
-               cos_alpha * cos_beta * z;
-    }
-
     // 逆时针
-    vec3 rotate_vec_counter_clockwise(float x, float y, float z) const {
-        auto vec_x = cos_beta * cos_gamma * x +
-                     (sin_alpha * sin_beta * cos_gamma - sin_gamma * cos_alpha) * y +
-                     (sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * z;
-        auto vec_y = cos_beta * sin_gamma * x +
-                     (cos_alpha * cos_gamma + sin_alpha * sin_beta * sin_gamma) * y +
-                     (-sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * z;
-        auto vec_z = -sin_beta * x +
-                     sin_alpha * cos_beta * y +
-                     cos_alpha * cos_beta * z;
+    vec3 rotate_vec_counter_clockwise(vec3 v) const {
+        auto vec_x = cos_beta * cos_gamma * v.x() +
+                     (sin_alpha * sin_beta * cos_gamma - sin_gamma * cos_alpha) * v.y() +
+                     (sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * v.z();
+        auto vec_y = cos_beta * sin_gamma * v.x() +
+                     (cos_alpha * cos_gamma + sin_alpha * sin_beta * sin_gamma) * v.y() +
+                     (-sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * v.z();
+        auto vec_z = -sin_beta * v.x() +
+                     sin_alpha * cos_beta * v.y() +
+                     cos_alpha * cos_beta * v.z();
         return vec3(vec_x, vec_y, vec_z);
     }
 
     // 顺时针
-    vec3 rotate_vec_negative_clockwise(float x, float y, float z) const {
-        auto vec_x = cos_beta * cos_gamma * x +
-                     (sin_alpha * sin_beta * cos_gamma + sin_gamma * cos_alpha) * y +
-                     (-sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * z;
-        auto vec_y = -cos_beta * sin_gamma * x +
-                     (cos_alpha * cos_gamma - sin_alpha * sin_beta * sin_gamma) * y +
-                     (sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * z;
-        auto vec_z = sin_beta * x -
-                     sin_alpha * cos_beta * y +
-                     cos_alpha * cos_beta * z;
+    vec3 rotate_vec_clockwise(vec3 v) const {
+        auto vec_x = cos_beta * cos_gamma * v.x() +
+                     (sin_alpha * sin_beta * cos_gamma + sin_gamma * cos_alpha) * v.y() +
+                     (-sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * v.z();
+        auto vec_y = -cos_beta * sin_gamma * v.x() +
+                     (cos_alpha * cos_gamma - sin_alpha * sin_beta * sin_gamma) * v.y() +
+                     (sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * v.z();
+        auto vec_z = sin_beta * v.x() -
+                     sin_alpha * cos_beta * v.y() +
+                     cos_alpha * cos_beta * v.z();
         return vec3(vec_x, vec_y, vec_z);
     }
 };
