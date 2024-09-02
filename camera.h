@@ -31,6 +31,9 @@ public:
     void render(const hittable &world, const char *file_name) {
         initialize();
 
+        clock_t start, stop;
+        start = clock();
+
         // Render
         int channels = 3;   // 3通道rgb
         unsigned char *data = new unsigned char[image_width * image_height * channels];
@@ -53,6 +56,10 @@ public:
         stbi_write_png(file_name, image_width, image_height, channels, data, 0);
         delete[]data;
         std::clog << "\rDone.\n";
+
+        stop = clock();
+        double timer_seconds = ((double) (stop - start)) / CLOCKS_PER_SEC;
+        std::cerr << "Render took " << timer_seconds << " seconds.\n";
     }
 
 private:
