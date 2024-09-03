@@ -48,4 +48,12 @@ __device__ interval operator+(float displacement, const interval &ival) {
     return ival + displacement;
 }
 
+__device__ interval operator*(const interval &ival, float displacement) {
+    return interval(ival.min * displacement, ival.max * displacement);
+}
+
+__device__ interval operator*(float displacement, const interval &ival) {
+    return ival * displacement;
+}
+
 #endif // INTERVAL_H

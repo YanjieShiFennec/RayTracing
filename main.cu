@@ -187,6 +187,7 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
         d_world[0]->add(box1);
 
         hittable *box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+        box2 = new scaling(box2, vec3(1.0f, 1.5f, 0.5f));
         box2 = new rotate_xyz(box2, -15.0f, -18.0f, 0.0f);
         box2 = new translate(box2, vec3(130.0f, 50.0f, 65.0f));
         d_world[0]->add(box2);

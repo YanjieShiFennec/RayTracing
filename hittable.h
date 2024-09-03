@@ -310,4 +310,38 @@ private:
     }
 };
 
+// 缩放操作
+class scaling : public hittable {
+public:
+    __device__ scaling(hittable* object, const vec3 &scale) : object(object), scale(scale) {
+        bbox = object->bounding_box() * scale;
+    }
+
+    __device__ bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
+        // Transform the ray from world space to object space
+        ray scaling_r(r.origin() / scale, r.direction() / scale, r.time());
+
+        // Determine whether an intersection exists in objects in object space (and if so, where).
+        if (!object->hit(scaling_r, ray_t, rec))
+            return false;
+
+        // Transform the intersection from object space back to world space.
+        rec.p *= scale;
+
+        // 调整法向量
+        rec.normal = unit_vector(rec.normal / scale);
+
+        return true;
+    }
+
+    __device__ aabb bounding_box() const override {
+        return bbox;
+    }
+
+private:
+    hittable* object;
+    vec3 scale;
+    aabb bbox;
+};
+
 #endif // HITTABLE_H

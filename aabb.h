@@ -96,5 +96,13 @@ __device__ aabb operator+(const vec3 &offset,const aabb &bbox) {
     return bbox + offset;
 }
 
+__device__ aabb operator*(const aabb &bbox, const vec3 &scale) {
+    return aabb(bbox.x * scale.x(), bbox.y * scale.y(), bbox.z * scale.z());
+}
+
+__device__ aabb operator*(const vec3 &scale, const aabb &bbox) {
+    return bbox * scale;
+}
+
 
 #endif //AABB_H
