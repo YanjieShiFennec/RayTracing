@@ -182,13 +182,13 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
 
         // two blocks
         hittable *box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
-        box1 = new rotate_y(box1, 15.0f);
+        box1 = new rotate_xyz(box1, 15.0f, 15.0f, 15.0f);
         box1 = new translate(box1, vec3(265.0f, 0.0f, 295.0f));
         d_world[0]->add(box1);
 
         hittable *box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
-        box2 = new rotate_y(box2, -18.0f);
-        box2 = new translate(box2, vec3(130.0f, 0.0f, 65.0f));
+        box2 = new rotate_xyz(box2, -15.0f, -18.0f, 0.0f);
+        box2 = new translate(box2, vec3(130.0f, 50.0f, 65.0f));
         d_world[0]->add(box2);
     }
 }
