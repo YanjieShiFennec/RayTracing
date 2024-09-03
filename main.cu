@@ -182,14 +182,17 @@ __global__ void create_world_cornell_box(hittable_list **d_world) {
 
         // two blocks
         hittable *box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
-        box1 = new rotate_xyz(box1, 15.0f, 15.0f, 15.0f);
-        box1 = new translate(box1, vec3(265.0f, 0.0f, 295.0f));
+        box1 = new rotate_xyz(box1, 90.0f, 90.0f, 0.0f);
+        box1 = new rotate_xyz(box1, -45.0f, 20.0f, 0.0f);
+        box1 = new translate(box1, vec3(165.0f, 250.0f, 295.0f));
         d_world[0]->add(box1);
 
-        hittable *box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+        // hittable *box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
+        auto material1 = new dielectric(1.5f);
+        hittable * box2 = new sphere(point3(0.0f, 0.0f, 0.0f), 50.0f, material1);
         box2 = new scaling(box2, vec3(1.0f, 1.5f, 0.5f));
-        box2 = new rotate_xyz(box2, -15.0f, -18.0f, 0.0f);
-        box2 = new translate(box2, vec3(130.0f, 50.0f, 65.0f));
+        box2 = new rotate_xyz(box2, 30.0f, -18.0f, 0.0f);
+        box2 = new translate(box2, vec3(230.0f, 350.0f, 320.0f));
         d_world[0]->add(box2);
     }
 }
