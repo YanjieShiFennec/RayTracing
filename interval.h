@@ -52,4 +52,12 @@ interval operator+(float displacement, const interval &ival) {
     return ival + displacement;
 }
 
+interval operator*(const interval &ival, float displacement) {
+    return interval(ival.min * displacement, ival.max * displacement);
+}
+
+interval operator*(float displacement, const interval &ival) {
+    return ival * displacement;
+}
+
 #endif // INTERVAL_H

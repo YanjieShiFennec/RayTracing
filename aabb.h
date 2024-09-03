@@ -88,8 +88,16 @@ aabb operator+(const aabb &bbox, const vec3 &offset) {
     return aabb(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
 }
 
-aabb operator+(const vec3 &offset,const aabb &bbox) {
+aabb operator+(const vec3 &offset, const aabb &bbox) {
     return bbox + offset;
+}
+
+aabb operator*(const aabb &bbox, const vec3 &scale) {
+    return aabb(bbox.x * scale.x(), bbox.y * scale.y(), bbox.z * scale.z());
+}
+
+aabb operator*(const vec3 &scale, const aabb &bbox) {
+    return bbox * scale;
 }
 
 #endif // AABB_H

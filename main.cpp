@@ -258,13 +258,14 @@ void cornell_box() {
 
     // two blocks
     shared_ptr<hittable> box1 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 330.0f, 165.0f), white);
-    box1 = make_shared<rotate>(box1, 0.0f, 15.0f, 0.0f);
+    box1 = make_shared<rotate_xyz>(box1, 0.0f, 15.0f, 0.0f);
     box1 = make_shared<translate>(box1, vec3(265.0f, 0.0f, 295.0f));
     world.add(box1);
 
     shared_ptr<hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
-    box2 = make_shared<rotate>(box2, -15.0f, -18.0f, 0.0f);
+    box2 = make_shared<rotate_xyz>(box2, -15.0f, -18.0f, 0.0f);
     box2 = make_shared<translate>(box2, vec3(130.0f, 0.0f, 65.0f));
+    box2 = make_shared<scaling>(box2, vec3(0.5f, 0.5f, 0.5f));
     world.add(box2);
 
     camera cam;

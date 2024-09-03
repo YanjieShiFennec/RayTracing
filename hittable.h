@@ -173,7 +173,7 @@ private:
     }
 };
 
-// 按顺序绕 x, y, z 轴逆时针旋转 α, β, γ 度（注意绕轴顺序不通得到的结果大部分情况是不同的！）
+// 按顺序绕 x, y, z 轴逆时针旋转 α, β, γ 度（注意绕轴顺序不同得到的结果大部分情况是不同的！）
 // https://blog.csdn.net/shenquanyue/article/details/103262512
 /*
  * 首先绕 X 轴逆时针旋转 α 度
@@ -209,9 +209,9 @@ private:
  * z''' = -sin(α)y'' + cos(α)z'' = sin(α)sin(γ)x - sin(α)cos(γ)y + cos(α)cos(β)z + sin(β)cos(α)cos(γ)x + sin(β)sin(γ)cos(α)y
  * 							    = (sin(β)cos(α)cos(γ) + sin(α)sin(γ))x + (sin(β)sin(γ)cos(α) - sin(α)cos(γ))y + cos(α)cos(β)z
  */
-class rotate : public hittable {
+class rotate_xyz : public hittable {
 public:
-    rotate(shared_ptr<hittable> object, float alpha, float beta, float gamma) : object(object) {
+    rotate_xyz(shared_ptr<hittable> object, float alpha, float beta, float gamma) : object(object) {
         auto alpha_radians = degrees_to_radians(alpha);
         auto beta_radians = degrees_to_radians(beta);
         auto gamma_radians = degrees_to_radians(gamma);
@@ -307,6 +307,40 @@ private:
                      cos_alpha * cos_beta * v.z();
         return vec3(vec_x, vec_y, vec_z);
     }
+};
+
+// 缩放操作
+class scaling : public hittable {
+public:
+    scaling(shared_ptr<hittable> object, const vec3 &scale) : object(object), scale(scale) {
+        bbox = object->bounding_box() * scale;
+    }
+
+    bool hit(const ray &r, interval ray_t, hit_record &rec) const override {
+        // Transform the ray from world space to object space
+        ray scaling_r(r.origin() / scale, r.direction() / scale, r.time());
+
+        // Determine whether an intersection exists in objects in object space (and if so, where).
+        if (!object->hit(scaling_r, ray_t, rec))
+            return false;
+
+        // Transform the intersection from object space back to world space.
+        rec.p *= scale;
+
+        // 调整法向量
+        rec.normal = unit_vector(rec.normal / scale);
+
+        return true;
+    }
+
+    aabb bounding_box() const override {
+        return bbox;
+    }
+
+private:
+    shared_ptr<hittable> object;
+    vec3 scale;
+    aabb bbox;
 };
 
 #endif // HITTABLE_H
