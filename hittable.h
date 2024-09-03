@@ -173,25 +173,41 @@ private:
     }
 };
 
-// 分别绕 x, y, z 轴逆时针旋转 α, β, γ 度
+// 按顺序绕 x, y, z 轴逆时针旋转 α, β, γ 度（注意绕轴顺序不通得到的结果大部分情况是不同的！）
 // https://blog.csdn.net/shenquanyue/article/details/103262512
 /*
- * 首先绕 X 轴逆时针旋转
+ * 首先绕 X 轴逆时针旋转 α 度
  * x' = x
  * y' = cos(α)y - sin(α)z
  * z' = sin(α)y + cos(α)z
  *
- * 接着绕 Y 轴逆时针旋转
+ * 接着绕 Y 轴逆时针旋转 β 度
  * x'' = sin(β)z' + cos(β)x' = sin(β)sin(α)y + sin(β)cos(α)z + cos(β)x
  * y'' = y' = cos(α)y - sin(α)z
  * z'' = cos(β)z' - sin(β)x' = cos(β)sin(α)y + cos(β)cos(α)z - sin(β)x
  *
- * 最后绕 Z 轴逆时针旋转
+ * 最后绕 Z 轴逆时针旋转 γ 度
  * x''' = cos(γ)x'' - sin(γ)y'' = cos(γ)sin(β)sin(α)y + cos(γ)sin(β)cos(α)z + cos(γ)cos(β)x - sin(γ)cos(α)y + sin(γ)sin(α)z
  *                              = cos(β)cos(γ)x + (sin(α)sin(β)cos(γ) - sin(γ)cos(α))y + (sin(β)cos(α)cos(γ) + sin(α)sin(γ))z
  * y''' = sin(γ)x'' + cos(γ)y'' = sin(γ)sin(β)sin(α)y + sin(γ)sin(β)cos(α)z + sin(γ)cos(β)x + cos(γ)cos(α)y - cos(γ)sin(α)z
  *                              = sin(γ)cos(β)x + (sin(α)sin(β)sin(γ) + cos(α)cos(γ))y + (sin(β)sin(γ)cos(α) - sin(α)cos(γ))z
  * z''' = z'' =  - sin(β)x + sin(α)cos(β)y + cos(α)cos(β)z
+ *
+ *
+ * 光线反向旋转同理，按顺序绕 z, y, x 轴顺时针旋转 γ, β, α 度
+ * x' = cos(γ)x + sin(γ)y
+ * y' = -sin(γ)x + cos(γ)y
+ * z' = z
+ *
+ * x'' = -sin(β)z' + cos(β)x' = -sin(β)z + cos(β)cos(γ)x + cos(β)sin(γ)y
+ * y'' = y' = -sin(γ)x + cos(γ)y
+ * z'' = cos(β)z' + sin(β)x' = cos(β)z + sin(β)cos(γ)x + sin(β)sin(γ)y
+ *
+ * x''' = x'' = cos(β)cos(γ)x + sin(γ)cos(β)y - sin(β)z
+ * y''' = cos(α)y'' + sin(α)z'' = -sin(γ)cos(α)x + cos(α)cos(γ)y + sin(α)cos(β)z + sin(α)sin(β)cos(γ)x + sin(α)sin(β)sin(γ)y
+ * 							    = (sin(α)sin(β)cos(γ) - sin(γ)cos(α))x + (sin(α)sin(β)sin(γ) + cos(α)cos(γ))y + sin(α)cos(β)z
+ * z''' = -sin(α)y'' + cos(α)z'' = sin(α)sin(γ)x - sin(α)cos(γ)y + cos(α)cos(β)z + sin(β)cos(α)cos(γ)x + sin(β)sin(γ)cos(α)y
+ * 							    = (sin(β)cos(α)cos(γ) + sin(α)sin(γ))x + (sin(β)sin(γ)cos(α) - sin(α)cos(γ))y + cos(α)cos(β)z
  */
 class rotate : public hittable {
 public:
@@ -281,13 +297,13 @@ private:
     // 顺时针
     vec3 rotate_vec_clockwise(vec3 v) const {
         auto vec_x = cos_beta * cos_gamma * v.x() +
-                     (sin_alpha * sin_beta * cos_gamma + sin_gamma * cos_alpha) * v.y() +
-                     (-sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * v.z();
-        auto vec_y = -cos_beta * sin_gamma * v.x() +
-                     (cos_alpha * cos_gamma - sin_alpha * sin_beta * sin_gamma) * v.y() +
-                     (sin_alpha * cos_gamma + sin_gamma * sin_beta * cos_alpha) * v.z();
-        auto vec_z = sin_beta * v.x() -
-                     sin_alpha * cos_beta * v.y() +
+                     sin_gamma * cos_beta * v.y() +
+                     sin_beta * v.z();
+        auto vec_y = (sin_alpha * sin_beta * cos_gamma - sin_gamma * cos_alpha) * v.x() +
+                     (sin_alpha * sin_beta * sin_gamma + cos_alpha * cos_gamma) * v.y() +
+                     sin_alpha * cos_beta * v.z();
+        auto vec_z = (sin_beta * cos_alpha * cos_gamma + sin_alpha * sin_gamma) * v.x() +
+                     (sin_beta * sin_gamma * cos_alpha - sin_alpha * cos_gamma) * v.y() +
                      cos_alpha * cos_beta * v.z();
         return vec3(vec_x, vec_y, vec_z);
     }

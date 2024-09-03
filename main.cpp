@@ -263,7 +263,7 @@ void cornell_box() {
     world.add(box1);
 
     shared_ptr<hittable> box2 = box(point3(0.0f, 0.0f, 0.0f), point3(165.0f, 165.0f, 165.0f), white);
-    box2 = make_shared<rotate>(box2, 0.0f, -18.0f, 0.0f);
+    box2 = make_shared<rotate>(box2, -15.0f, -18.0f, 0.0f);
     box2 = make_shared<translate>(box2, vec3(130.0f, 0.0f, 65.0f));
     world.add(box2);
 
