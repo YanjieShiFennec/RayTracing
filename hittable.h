@@ -297,7 +297,7 @@ private:
     // 顺时针
     vec3 rotate_vec_clockwise(vec3 v) const {
         auto vec_x = cos_beta * cos_gamma * v.x() +
-                     sin_gamma * cos_beta * v.y() +
+                     sin_gamma * cos_beta * v.y() -
                      sin_beta * v.z();
         auto vec_y = (sin_alpha * sin_beta * cos_gamma - sin_gamma * cos_alpha) * v.x() +
                      (sin_alpha * sin_beta * sin_gamma + cos_alpha * cos_gamma) * v.y() +
