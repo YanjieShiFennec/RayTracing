@@ -63,7 +63,7 @@ int main() {
     clock_t start, stop;
     start = clock();
 
-    dim3 blocks((image_width + tx - 1) / tx, (image_width + ty - 1) / ty);
+    dim3 blocks((image_width + tx - 1) / tx, (image_height + ty - 1) / ty);
     dim3 threads(tx, ty);
     render<<<blocks, threads>>>(data, image_width, image_height);
     checkCudaErrors(cudaGetLastError());
